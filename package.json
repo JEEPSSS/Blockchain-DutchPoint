@@ -1,0 +1,36 @@
+{
+  "name": "fairlaunch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SC4053 educational Dutch auction token launch dApp",
+  "scripts": {
+    "compile": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat compile",
+    "test": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test",
+    "node": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat node",
+    "deploy:local": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/deploy-local.ts --network localhost",
+    "demo": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/demo.ts",
+    "export:frontend": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/export-frontend.ts",
+    "dev": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.hardhat.json",
+    "build": "tsc -b tsconfig.app.json && vite build",
+    "check": "npm run compile && npm run test && npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "4.0.0",
+    "@openzeppelin/contracts": "5.6.1",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "ethers": "6.17.0",
+    "hardhat": "3.18.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.1"
+  },
+  "devDependencies": {
+    "@types/mocha": "10.0.10"
+  }
+}
