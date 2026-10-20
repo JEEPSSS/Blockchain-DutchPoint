@@ -299,6 +299,7 @@ contract DutchAuction is Ownable, ReentrancyGuard {
         }
 
         uint256 amount = token.balanceOf(address(this));
+        // slither-disable-next-line incorrect-equality (a donated balance only adds tokens to burn)
         if (amount == 0) {
             revert NoTokensToBurn();
         }
@@ -391,6 +392,7 @@ contract DutchAuction is Ownable, ReentrancyGuard {
         if (finalized) {
             return (Math.mulDiv(commitment, TOKEN_SCALE, finalPrice), true);
         }
+        // slither-disable-next-line incorrect-equality (zero-guard on internal accounting)
         if (commitment == 0 || !started) {
             return (0, false);
         }
@@ -468,6 +470,7 @@ contract DutchAuction is Ownable, ReentrancyGuard {
     function _timeClearing(
         uint256 timestamp
     ) private view returns (bool isCleared, uint256 price, uint256 time) {
+        // slither-disable-next-line incorrect-equality (zero-guard on internal accounting)
         if (!started || totalCommitted == 0) {
             return (false, 0, 0);
         }
@@ -503,6 +506,7 @@ contract DutchAuction is Ownable, ReentrancyGuard {
     }
 
     function _burnUnsold(uint256 amount) private {
+        // slither-disable-next-line incorrect-equality (zero-guard on a computed amount)
         if (amount == 0) {
             return;
         }

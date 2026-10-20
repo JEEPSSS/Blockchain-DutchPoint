@@ -1,0 +1,184 @@
+# Slither static analysis
+# Tool: slither 0.11.6, solc 0.8.28 (solc-select), config: slither.config.json
+# Date: 2026-10-20T05:00Z
+
+## A. ORIGINAL AI-generated DutchAuction (commit 0a75a78, checked out to tmp/original/)
+INFO:Detectors:
+Detector: reentrancy-eth
+Reentrancy in DutchAuction.withdrawIssuerProceeds(address) (tmp/original/DutchAuction.sol#216-235):
+	External calls:
+	- (ok,None) = recipient.call{value: amount}() (tmp/original/DutchAuction.sol#228)
+	State variables written after the call(s):
+	- issuerProceedsWithdrawn -= amount (tmp/original/DutchAuction.sol#230)
+	DutchAuction.issuerProceedsWithdrawn (tmp/original/DutchAuction.sol#57) can be used in cross function reentrancies:
+	- DutchAuction.issuerProceedsWithdrawn (tmp/original/DutchAuction.sol#57)
+Reentrancy in DutchAuction.withdrawRefundTo(address) (tmp/original/DutchAuction.sol#187-214):
+	External calls:
+	- (ok,None) = recipient.call{value: amount}() (tmp/original/DutchAuction.sol#205)
+	State variables written after the call(s):
+	- refundCredits[msg.sender] = amount (tmp/original/DutchAuction.sol#207)
+	DutchAuction.refundCredits (tmp/original/DutchAuction.sol#62) can be used in cross function reentrancies:
+	- DutchAuction.refundCredits (tmp/original/DutchAuction.sol#62)
+	- refundLiability += amount (tmp/original/DutchAuction.sol#208)
+	DutchAuction.refundLiability (tmp/original/DutchAuction.sol#54) can be used in cross function reentrancies:
+	- DutchAuction.refundLiability (tmp/original/DutchAuction.sol#54)
+	- refundsWithdrawn -= amount (tmp/original/DutchAuction.sol#209)
+	DutchAuction.refundsWithdrawn (tmp/original/DutchAuction.sol#55) can be used in cross function reentrancies:
+	- DutchAuction.refundsWithdrawn (tmp/original/DutchAuction.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+INFO:Detectors:
+Detector: incorrect-equality
+DutchAuction._acceptedCost(uint256,uint256) (tmp/original/DutchAuction.sol#469-474) uses a dangerous strict equality:
+	- tokens == 0 (tmp/original/DutchAuction.sol#470)
+DutchAuction._burnUnsold(uint256) (tmp/original/DutchAuction.sol#476-484) uses a dangerous strict equality:
+	- amount == 0 (tmp/original/DutchAuction.sol#477)
+DutchAuction.burnRemainderAfterAllSettled() (tmp/original/DutchAuction.sol#237-251) uses a dangerous strict equality:
+	- amount == 0 (tmp/original/DutchAuction.sol#246)
+DutchAuction.withdrawRefundTo(address) (tmp/original/DutchAuction.sol#187-214) uses a dangerous strict equality:
+	- amount == 0 (tmp/original/DutchAuction.sol#197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: timestamp
+DutchAuction.finalize() (tmp/original/DutchAuction.sol#144-177) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < closeTime (tmp/original/DutchAuction.sol#153)
+	- clearingTime != 0 (tmp/original/DutchAuction.sol#160)
+DutchAuction.withdrawRefundTo(address) (tmp/original/DutchAuction.sol#187-214) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (tmp/original/DutchAuction.sol#197)
+DutchAuction.currentPrice() (tmp/original/DutchAuction.sol#253-258) uses timestamp for comparisons
+	Dangerous comparisons:
+	- clearingTime != 0 (tmp/original/DutchAuction.sol#254)
+DutchAuction.status() (tmp/original/DutchAuction.sol#267-281) uses timestamp for comparisons
+	Dangerous comparisons:
+	- clearingTime != 0 (tmp/original/DutchAuction.sol#274)
+	- block.timestamp >= endTime() (tmp/original/DutchAuction.sol#277)
+DutchAuction.priceAt(uint256) (tmp/original/DutchAuction.sol#283-298) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! started || timestamp <= startTime (tmp/original/DutchAuction.sol#284)
+	- elapsed >= AUCTION_DURATION (tmp/original/DutchAuction.sol#289)
+	- price < reservePrice (tmp/original/DutchAuction.sol#297)
+DutchAuction.settlementOf(address) (tmp/original/DutchAuction.sol#304-343) uses timestamp for comparisons
+	Dangerous comparisons:
+	- totalCommitted >= requiredEthAtPrice(quotePrice) (tmp/original/DutchAuction.sol#328)
+	- tokens > saleSupply (tmp/original/DutchAuction.sol#332)
+	- acceptedEth > commitment (tmp/original/DutchAuction.sol#338)
+	- clearingTime != 0 (tmp/original/DutchAuction.sol#327)
+DutchAuction._contribute(address,uint256) (tmp/original/DutchAuction.sol#345-379) uses timestamp for comparisons
+	Dangerous comparisons:
+	- finalized || block.timestamp >= endTime() (tmp/original/DutchAuction.sol#352)
+	- clearingTime != 0 (tmp/original/DutchAuction.sol#357)
+	- totalCommitted >= requiredEthAtPrice(price) (tmp/original/DutchAuction.sol#370)
+DutchAuction._syncTimeClearing(uint256) (tmp/original/DutchAuction.sol#381-402) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! started || clearingTime != 0 || totalCommitted == 0 (tmp/original/DutchAuction.sol#382)
+	- earliest < lastCommitmentTimestamp (tmp/original/DutchAuction.sol#393)
+	- earliest <= cappedTimestamp (tmp/original/DutchAuction.sol#397)
+	- timestamp > endTime() (tmp/original/DutchAuction.sol#386)
+DutchAuction._settleAccount(address) (tmp/original/DutchAuction.sol#422-451) uses timestamp for comparisons
+	Dangerous comparisons:
+	- tokens != 0 (tmp/original/DutchAuction.sol#448)
+DutchAuction._finalSettlement(uint256) (tmp/original/DutchAuction.sol#453-467) uses timestamp for comparisons
+	Dangerous comparisons:
+	- acceptedEth > commitment (tmp/original/DutchAuction.sol#463)
+DutchAuction._acceptedCost(uint256,uint256) (tmp/original/DutchAuction.sol#469-474) uses timestamp for comparisons
+	Dangerous comparisons:
+	- tokens == 0 (tmp/original/DutchAuction.sol#470)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in DutchAuction.withdrawRefundTo(address) (tmp/original/DutchAuction.sol#187-214):
+	- (ok,None) = recipient.call{value: amount}() (tmp/original/DutchAuction.sol#205)
+Low level call in DutchAuction.withdrawIssuerProceeds(address) (tmp/original/DutchAuction.sol#216-235):
+	- (ok,None) = recipient.call{value: amount}() (tmp/original/DutchAuction.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:tmp/original/DutchAuction.sol analyzed (13 contracts with 102 detectors), 19 result(s) found
+
+## B. Current DutchAuction (after fixes; incorrect-equality false positives annotated inline)
+INFO:Detectors:
+Detector: reentrancy-benign
+Reentrancy in DutchAuction._refundSurplus(address,uint256) (contracts/DutchAuction.sol#455-464):
+	External calls:
+	- (ok,None) = address(account).call{value: amount}() (contracts/DutchAuction.sol#456)
+	State variables written after the call(s):
+	- refundCredits[account] += amount (contracts/DutchAuction.sol#460)
+	- refundLiability += amount (contracts/DutchAuction.sol#461)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+INFO:Detectors:
+Detector: timestamp
+DutchAuction.finalize() (contracts/DutchAuction.sol#258-288) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < closeTime (contracts/DutchAuction.sol#267)
+	- clearingTime == 0 (contracts/DutchAuction.sol#271)
+	- cleared = clearingTime != 0 (contracts/DutchAuction.sol#281)
+DutchAuction.status() (contracts/DutchAuction.sol#321-333) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= endTime() (contracts/DutchAuction.sol#328)
+DutchAuction.clearingState() (contracts/DutchAuction.sol#349-358) uses timestamp for comparisons
+	Dangerous comparisons:
+	- clearingTime != 0 (contracts/DutchAuction.sol#350)
+	- block.timestamp < closeTime (contracts/DutchAuction.sol#357)
+DutchAuction.priceAt(uint256) (contracts/DutchAuction.sol#361-372) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! started || timestamp <= startTime (contracts/DutchAuction.sol#362)
+	- elapsed >= AUCTION_DURATION (contracts/DutchAuction.sol#367)
+DutchAuction.remainingCapacity() (contracts/DutchAuction.sol#380-386) uses timestamp for comparisons
+	Dangerous comparisons:
+	- cap > totalCommitted (contracts/DutchAuction.sol#385)
+DutchAuction.tokensOwed(address) (contracts/DutchAuction.sol#390-401) uses timestamp for comparisons
+	Dangerous comparisons:
+	- commitment == 0 || ! started (contracts/DutchAuction.sol#396)
+DutchAuction._contribute(address,uint256) (contracts/DutchAuction.sol#407-450) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= endTime() (contracts/DutchAuction.sol#414)
+	- accepted != 0 (contracts/DutchAuction.sol#429)
+	- amount >= capacity (contracts/DutchAuction.sol#440)
+	- surplus != 0 (contracts/DutchAuction.sol#447)
+	- cap > totalCommitted (contracts/DutchAuction.sol#424)
+	- amount < capacity (contracts/DutchAuction.sol#425)
+DutchAuction._timeClearing(uint256) (contracts/DutchAuction.sol#470-492) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! started || totalCommitted == 0 (contracts/DutchAuction.sol#474)
+	- price < reservePrice (contracts/DutchAuction.sol#479)
+	- time < lastCommitmentTimestamp (contracts/DutchAuction.sol#485)
+	- time > timestamp (contracts/DutchAuction.sol#488)
+DutchAuction._earliestTimeAtOrBelow(uint256) (contracts/DutchAuction.sol#495-506) uses timestamp for comparisons
+	Dangerous comparisons:
+	- price >= startPrice (contracts/DutchAuction.sol#496)
+DutchAuction._burnUnsold(uint256) (contracts/DutchAuction.sol#508-517) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (contracts/DutchAuction.sol#510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in DutchAuction.withdrawIssuerProceeds(address) (contracts/DutchAuction.sol#169-190):
+	- (ok,None) = recipient.call{value: amount}() (contracts/DutchAuction.sol#184)
+Low level call in DutchAuction.withdrawRefundTo(address) (contracts/DutchAuction.sol#231-250):
+	- (ok,None) = recipient.call{value: amount}() (contracts/DutchAuction.sol#244)
+Low level call in DutchAuction._refundSurplus(address,uint256) (contracts/DutchAuction.sol#455-464):
+	- (ok,None) = address(account).call{value: amount}() (contracts/DutchAuction.sol#456)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:contracts/DutchAuction.sol analyzed (13 contracts with 102 detectors), 14 result(s) found
+
+## C. GavoraToken
+INFO:Slither:contracts/GavoraToken.sol analyzed (9 contracts with 102 detectors), 0 result(s) found
+
+## D. VulnerableAuction (deliberately vulnerable, test-only) - Slither should flag reentrancy-eth
+INFO:Detectors:
+Detector: reentrancy-eth
+Reentrancy in VulnerableAuction.withdrawRefund() (contracts/test/VulnerableAuction.sol#31-41):
+	External calls:
+	- (ok,None) = msg.sender.call{value: amount}() (contracts/test/VulnerableAuction.sol#37)
+	State variables written after the call(s):
+	- refundCredits[msg.sender] = 0 (contracts/test/VulnerableAuction.sol#40)
+	VulnerableAuction.refundCredits (contracts/test/VulnerableAuction.sol#17) can be used in cross function reentrancies:
+	- VulnerableAuction.contribute() (contracts/test/VulnerableAuction.sol#23-29)
+	- VulnerableAuction.refundCredits (contracts/test/VulnerableAuction.sol#17)
+	- VulnerableAuction.withdrawRefund() (contracts/test/VulnerableAuction.sol#31-41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in VulnerableAuction.withdrawRefund() (contracts/test/VulnerableAuction.sol#31-41):
+	- (ok,None) = msg.sender.call{value: amount}() (contracts/test/VulnerableAuction.sol#37)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:contracts/test/VulnerableAuction.sol analyzed (1 contracts with 102 detectors), 2 result(s) found
