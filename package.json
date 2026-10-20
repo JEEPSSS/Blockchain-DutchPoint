@@ -16,6 +16,7 @@
     "deploy:sepolia": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/deploy.ts --network sepolia",
     "verify:sepolia": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat verify --network sepolia",
     "time:advance": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/advance-time.ts --network localhost",
+    "seed:local": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/seed-local.ts --network localhost",
     "keystore": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat keystore",
     "demo": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/demo.ts",
     "export:frontend": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/export-frontend.ts",

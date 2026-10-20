@@ -36,6 +36,16 @@ export default defineConfig({
     }
   },
   networks: {
+    // Used by `npm run node`. Mining a block every 2 seconds keeps block.timestamp moving on
+    // the local chain, so the UI's countdown and time-based clearing track real time.
+    node: {
+      type: "edr-simulated",
+      chainType: "l1",
+      mining: {
+        auto: true,
+        interval: 2000
+      }
+    },
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1"

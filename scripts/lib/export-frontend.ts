@@ -10,8 +10,11 @@ export type Deployment = {
   explorer: string | null;
 };
 
+const LOCAL_CHAIN_ID = 31337;
 const generatedDir = path.join(process.cwd(), "src", "generated");
-const deploymentsFile = path.join(generatedDir, "deployments.json");
+// Public deployments are committed; local ones change on every run and are gitignored.
+const deploymentsFile = (chainId: number) =>
+  path.join(generatedDir, chainId === LOCAL_CHAIN_ID ? "deployments.local.json" : "deployments.json");
 
 async function exportAbi(contract: string) {
   const artifact = JSON.parse(
@@ -32,14 +35,16 @@ export async function exportFrontendArtifacts(deployment?: Deployment) {
   await exportAbi("DutchAuction");
   await exportAbi("GavoraToken");
 
+  if (deployment === undefined) {
+    return;
+  }
+  const file = deploymentsFile(deployment.chainId);
   let deployments: Record<string, Deployment> = {};
   try {
-    deployments = JSON.parse(await readFile(deploymentsFile, "utf8"));
+    deployments = JSON.parse(await readFile(file, "utf8"));
   } catch {
-    // First export: start with an empty map.
+    // First export for this file: start with an empty map.
   }
-  if (deployment !== undefined) {
-    deployments[String(deployment.chainId)] = deployment;
-  }
-  await writeFile(deploymentsFile, `${JSON.stringify(deployments, null, 2)}\n`);
+  deployments[String(deployment.chainId)] = deployment;
+  await writeFile(file, `${JSON.stringify(deployments, null, 2)}\n`);
 }
