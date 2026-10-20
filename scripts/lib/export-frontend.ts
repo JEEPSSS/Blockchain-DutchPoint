@@ -1,45 +1,45 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-type DeploymentAddresses = {
+export type Deployment = {
   chainId: number;
-  auction: string;
+  networkName: string;
   token: string;
-  startedAt?: string;
+  auction: string;
+  deployedAtBlock: number;
+  explorer: string | null;
 };
 
 const generatedDir = path.join(process.cwd(), "src", "generated");
+const deploymentsFile = path.join(generatedDir, "deployments.json");
 
-export async function exportFrontendArtifacts(addresses?: DeploymentAddresses) {
-  await mkdir(generatedDir, { recursive: true });
-
-  const auctionArtifact = JSON.parse(
+async function exportAbi(contract: string) {
+  const artifact = JSON.parse(
     await readFile(
-      path.join(process.cwd(), "artifacts", "contracts", "DutchAuction.sol", "DutchAuction.json"),
+      path.join(process.cwd(), "artifacts", "contracts", `${contract}.sol`, `${contract}.json`),
       "utf8"
     )
   );
-  const tokenArtifact = JSON.parse(
-    await readFile(
-      path.join(process.cwd(), "artifacts", "contracts", "GavoraToken.sol", "GavoraToken.json"),
-      "utf8"
-    )
-  );
-
   await writeFile(
-    path.join(generatedDir, "DutchAuction.json"),
-    `${JSON.stringify({ abi: auctionArtifact.abi }, null, 2)}\n`
+    path.join(generatedDir, `${contract}.json`),
+    `${JSON.stringify({ abi: artifact.abi }, null, 2)}\n`
   );
-  await writeFile(
-    path.join(generatedDir, "GavoraToken.json"),
-    `${JSON.stringify({ abi: tokenArtifact.abi }, null, 2)}\n`
-  );
-
-  if (addresses !== undefined) {
-    await writeFile(
-      path.join(generatedDir, "addresses.local.json"),
-      `${JSON.stringify(addresses, null, 2)}\n`
-    );
-  }
 }
 
+/** Copies contract ABIs to the frontend and records a deployment under its chain ID. */
+export async function exportFrontendArtifacts(deployment?: Deployment) {
+  await mkdir(generatedDir, { recursive: true });
+  await exportAbi("DutchAuction");
+  await exportAbi("GavoraToken");
+
+  let deployments: Record<string, Deployment> = {};
+  try {
+    deployments = JSON.parse(await readFile(deploymentsFile, "utf8"));
+  } catch {
+    // First export: start with an empty map.
+  }
+  if (deployment !== undefined) {
+    deployments[String(deployment.chainId)] = deployment;
+  }
+  await writeFile(deploymentsFile, `${JSON.stringify(deployments, null, 2)}\n`);
+}

@@ -1,5 +1,5 @@
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
-import { defineConfig } from "hardhat/config";
+import { configVariable, defineConfig } from "hardhat/config";
 
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthers],
@@ -44,6 +44,19 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: "http://127.0.0.1:8545"
+    },
+    // Optional public testnet. Secrets are read from the Hardhat keystore or environment
+    // variables only when this network is used: npm run keystore -- set SEPOLIA_RPC_URL
+    sepolia: {
+      type: "http",
+      chainType: "l1",
+      url: configVariable("SEPOLIA_RPC_URL"),
+      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")]
+    }
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("ETHERSCAN_API_KEY")
     }
   },
   test: {
