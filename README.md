@@ -121,7 +121,7 @@ docs/                      Spec, architecture, assumptions, AI audit report, evi
 
 | Document | Contents |
 | --- | --- |
-| [`docs/ai-audit-report.md`](docs/ai-audit-report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence) |
+| [`docs/ai-audit-report.md`](docs/ai-audit-report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence, and an appendix linking the design to the lectures) |
 | [`docs/evidence/`](docs/evidence/) | Before/after test logs, PoC output, mutation check, coverage, Slither |
 | [`docs/prompts/`](docs/prompts/README.md) | Prompt logs for ChatGPT, Codex and Claude Code |
 | [`docs/spec.md`](docs/spec.md) | Requirements and auction mathematics |

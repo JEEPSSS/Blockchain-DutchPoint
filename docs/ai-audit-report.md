@@ -1,7 +1,7 @@
 # DutchPoint - AI Audit Report
 
 **DutchPoint: A Decentralized Dutch Auction Platform** - SC4053 Blockchain Technology, AY2026-27 Semester 1, Option 2 (Dutch Auction).
-Token: Gavora (GVRA). Repository branch with all evidence: `audit/claude-review`.
+Token: Gavora (GVRA). Every evidence commit cited below is in the history of the `main` branch.
 
 > Items marked **TODO (team)** need facts only the team has (roles, original prompts). They are left
 > blank on purpose rather than guessed.
@@ -30,7 +30,12 @@ after, and an end-to-end run of the real UI in headless Chrome.
 
 ## 1. Initial Specification & System Scope
 
-What the team set out to build, from the brief and the team's own decisions:
+**How this scope was recorded.** Before the first AI prompt, the team read the brief, chose Option 2 and
+discussed what to build, but kept no notes. At that stage the team also chose the names **DutchPoint**
+(platform) and **Gavora** (token), and gave them to ChatGPT with the first prompt. The scope below was
+written down afterwards from the brief and the team's recollection, so it is a reconstruction, not a
+document from the time. The first *written* plan was ChatGPT's
+([`prompts/chatgpt-plan.txt`](prompts/chatgpt-plan.txt)), and this report treats it as AI output (§3-§4).
 
 **Core requirements (brief, Option 2)**
 - An ERC20 project token and a *separate* auction contract.
@@ -42,20 +47,38 @@ What the team set out to build, from the brief and the team's own decisions:
 - Tricky points to resolve: block-based time and continuous decay, a bid that bridges the clearing
   threshold, safe refunds, and permanent burning.
 
-**Team decisions**
-- Platform **DutchPoint**; token **Gavora (GVRA)**, from "gavel"; tagline *"Falling prices. One clearing price."*
-- Local Hardhat deployment for the demo. According to the teammate's notes on the companion documents
-  (`Document.pdf`, `Document 2.pdf`, recorded in [`ai-development-log.md`](ai-development-log.md)), local
-  deployment is acceptable and the demo video must be at most 10 minutes. A Sepolia deployment is
-  optional extra evidence.
-- Target the rubric's "High Standard" band in all three criteria.
+**Smart contract logic intended**
+- Two contracts: a fixed-supply ERC20 token, and an auction contract that holds the tokens on sale.
+- The price starts high and falls with time to a reserve price over the 20-minute window.
+- Bidders send ETH. Once the committed ETH can buy every token at the current price, the auction ends
+  at that price.
+- Everyone then pays the same final price. Bidders claim their tokens, surplus ETH is refunded, and
+  unsold tokens are burned.
+- ETH refunds must be safe against reentrancy (the bonus requirement).
 
 **UI features intended:** wallet connection, live price and countdown, a bid form, the user's
 allocation, claim and refund actions, and visible burn/settlement results.
 
-**TODO (team):** describe any planning done *before* the first AI prompt (meeting notes, sketches,
-division of work). If the first written plan was the ChatGPT output, say so - the report already
-treats [`prompts/chatgpt-plan.txt`](prompts/chatgpt-plan.txt) as AI output.
+**Delivery constraints** (the course's *Development Project* page)
+- Submit by 8 November, 11:59 pm: the whole codebase as `GroupName.zip`, including a README that lets the
+  graders deploy it (local deployment is fine), and a demo video of at most 10 minutes. The video opens
+  with the architecture and includes a hands-on demo.
+- So the target is a local Hardhat deployment. A Sepolia deployment is optional extra evidence.
+- Branding: tagline *"Falling prices. One clearing price."*; ticker **GVRA**, from "gavel".
+- Goal: the rubric's "High Standard" band in all three criteria.
+
+**What the initial scope left open.** The brief's "tricky points", and two related questions it does
+not raise, were left to the design stage. The AI tools made these choices, and most findings in §5
+trace back to them:
+
+| Open question | How the AI tools answered it | Did the answer hold? |
+| --- | --- | --- |
+| Block-based countdown and continuous price decay | Codex: linear decay on `block.timestamp` | Yes. Timestamp drift is discussed in [Appendix A](#appendix-a-course-concepts-applied) |
+| A bid that bridges the clearing threshold | ChatGPT: the final bidder gets only what is left. Codex: share the supply pro-rata | No. Codex's rule lets a late whale take about 91% of the supply (F1) |
+| Clearing caused by time passing, with no new bid *(not in the brief)* | Codex: detected in state-changing functions | Partly. Views and the UI missed it (F2, F3) |
+| Safe ETH refunds | Codex: pull-based refund credits behind `ReentrancyGuard` | Mostly. Dead code after external calls (F5); a reentrancy test that could not fail (F6) |
+| When the issuer gets the proceeds *(not in the brief)* | Codex: after every bidder has settled | No. One inactive bidder locks the revenue (F4) |
+| Permanent burning | Codex: burn unsold stock at finalization, and rounding dust after all claims | Yes |
 
 ## 2. Development Methodology & AI Tooling Infrastructure
 
@@ -450,3 +473,25 @@ The reviewing AI also made mistakes. They were caught by the same process:
 4. Run static analysis on the *original* AI output too: it shows what the tools can and cannot see.
 5. Exercise the real UI end to end. Many defects only exist between layers.
 6. Never accept an AI's claim of a fix, or of a finding, without reproducible evidence.
+
+---
+
+## Appendix A: Course concepts applied
+
+The final design was checked against the SC4053 lecture slides. Slide numbers are the page numbers of
+each deck: Module 2 Lectures 3-4 (Bitcoin mining and consensus), Module 3 Lectures 1-2 (Ethereum, the
+"World Computer"), and the invited talk *Smart Contracts and Tokens*.
+
+| Lecture concept | How DutchPoint applies it |
+| --- | --- |
+| A payment to a contract account runs its payable fallback code (M3 L1, slides 15-16 and 19) | `receive()` treats a plain ETH transfer as a bid. In the other direction, a refund to a contract bidder runs *that bidder's* code, so a refund can fail or re-enter. Both cases are tested (`RejectingReceiver`, `ReentrancyAttacker`) |
+| Contracts send internal messages as a chain reaction to an EOA's transaction (M3 L1, slides 27-30) | The surplus refund is an internal message inside the bidder's own transaction. A reentrancy attack is a nested message back into the auction, which `nonReentrant` and checks-effects-interactions block. `docs/evidence/05` shows the same attacker draining a vulnerable contract |
+| The unsafe faucet: anyone can withdraw, via `msg.sender.transfer` (M3 L2, slide 19) | Every withdrawal is scoped: a bidder can only withdraw their own refund credit, and only the issuer can withdraw proceeds. ETH goes out through `call` rather than `transfer`. `transfer`'s 2,300-gas stipend breaks smart-contract wallets, so the protection comes from the guard and state ordering, not from a gas limit |
+| Gas limit per transaction; running out of gas aborts it; gas deters denial of service (M3 L2, slides 13-15) | No function loops over bidders. Each bidder claims for themselves, so the gas cost of every call is independent of how many people bid, and no bidder can make settlement too expensive for others |
+| Contract code is immutable; a fix means a new instance (M3 L2, slide 18) | One auction per deployment, no upgrade proxy, and immutable sale parameters. A deployed bug cannot be patched, which is why the audit in §5 happened before any deployment |
+| A block's timestamp only has to be later than its parent's (M3 L1, slide 8) | The price is a pure function of `block.timestamp`. On proof-of-stake Ethereum each 12-second slot fixes the timestamp, and a whole slot moves the price by 12 / 1,200 = 1% of the start-to-reserve range (0.00015 ETH per GVRA at the default prices). No producer can shift it further |
+| Miners order transactions by priority and fee, and may delay a transaction (M2 L3, slide 16; M2 L4, slide 12) | A uniform falling price removes the reason to race: waiting only lowers the price, and everyone pays the clearing price. The one race left is at sell-out, where the first bid to arrive gets the remaining capacity. It only concerns the last slice of supply, and it is listed as a known limitation in [`assumptions.md`](assumptions.md#known-limitations) |
+| Ether sent to a designated burn address is lost forever (M3 L1, slide 25) | Unsold GVRA goes further than a burn address: `ERC20Burnable.burn` lowers `totalSupply`, so the tokens leave the supply itself, not just circulation |
+| A malicious ERC20 can lie in `transfer` (invited talk, slide 34) | The auction trusts its token, so it is only deployed with `GavoraToken`: unmodified OpenZeppelin ERC20 code with no owner, no mint and no hooks. `start()` refuses to open unless the auction holds the full sale supply, and claims use `SafeERC20` |
+| ERC20 allowance workflow, `approve` then `transferFrom` (invited talk, slides 29-30) | Not needed. The issuer funds the auction with a direct `transfer`, and bidders pay in ETH, so the UI never asks anyone to approve a token spend |
+| Client-blockchain architecture and the decentralization stack (invited talk, slides 54-55) | No backend and no database. The React app reads the chain over JSON-RPC and signs through the wallet, and it rebuilds the bid history from contract events. The only off-chain piece is the static frontend |

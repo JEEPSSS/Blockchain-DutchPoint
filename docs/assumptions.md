@@ -84,3 +84,14 @@ credits are tracked separately, so proceeds can never consume ETH owed to bidder
   affected, never anyone's allocation.
 - At wei-scale prices (a few wei per token), rounding the time-clearing price up to a whole wei can leave
   a small share of supply unsold. This is irrelevant at realistic prices, and it is covered by a test.
+- Near sell-out, bids still race. The first bid to arrive gets the remaining capacity, so a bidder may pay
+  a higher priority fee to be included first, and a block producer can choose the order within a block or
+  delay a bid. Before that point there is no reason to race, because the price only falls and everyone pays
+  the clearing price, and the race only concerns the last slice of supply. Removing it entirely would need
+  batch settlement (for example, settling all bids in the final period together), which is out of scope.
+  The AI's original pro-rata rule did not remove it either, and it let a late whale crowd out earlier
+  bidders (audit finding F1).
+- The auction trusts its token contract. It must be paired with a standard ERC20 such as `GavoraToken`.
+  A token with transfer hooks or a dishonest `balanceOf` is out of scope.
+- The price follows `block.timestamp`. On proof-of-stake Ethereum the timestamp of each 12-second slot is
+  fixed, so the price can only lag by up to one slot (1% of the start-to-reserve range).
