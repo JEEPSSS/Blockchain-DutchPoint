@@ -1,0 +1,66 @@
+# Regression tests run against the ORIGINAL AI-generated contract (commit 0a75a78)
+# Command: npm run test -- test/AuditRegressions.test.ts
+# Date: 2026-10-20T04:47Z
+
+
+> fairlaunch@0.1.0 test
+> mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test test/AuditRegressions.test.ts
+
+No contracts to compile
+Running Mocha tests
+
+
+  Audit regressions
+    1) F1: a late oversized bid cannot crowd out earlier bidders
+    2) F2: status and price reflect clearing caused by time passing
+    3) F3: a cleared auction reports AwaitingFinalization once the window ends
+    4) F4: issuer proceeds are withdrawable at finalization without waiting for bidders
+
+
+  0 passing (354ms)
+  4 failing
+
+  1) Audit regressions
+       F1: a late oversized bid cannot crowd out earlier bidders:
+
+      AssertionError: expected 54545454545454545454 to equal 533333333333333333333.
+      + expected - actual
+
+      -54545454545454545454
+      +533333333333333333333
+      
+      at Context.<anonymous> (test/AuditRegressions.test.ts:72:57)
+
+  2) Audit regressions
+       F2: status and price reflect clearing caused by time passing:
+
+      AssertionError: expected 1 to equal 2.
+      + expected - actual
+
+      -1
+      +2
+      
+      at Context.<anonymous> (test/AuditRegressions.test.ts:93:41)
+
+  3) Audit regressions
+       F3: a cleared auction reports AwaitingFinalization once the window ends:
+
+      AssertionError: expected 2 to equal 3.
+      + expected - actual
+
+      -2
+      +3
+      
+      at Context.<anonymous> (test/AuditRegressions.test.ts:106:41)
+
+  4) Audit regressions
+       F4: issuer proceeds are withdrawable at finalization without waiting for bidders:
+     SolidityError: VM Exception while processing transaction: reverted with custom error 'NoProceedsAvailable()'
+      at DutchAuction.withdrawIssuerProceeds (contracts/DutchAuction.sol:223)
+
+
+
+
+4 failing (4 mocha)
+
+Test run failed
