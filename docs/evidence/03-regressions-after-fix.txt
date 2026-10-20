@@ -1,0 +1,24 @@
+# Regression tests after the fix
+# Command: npm run test -- test/AuditRegressions.test.ts
+# Date: 2026-10-20T04:52Z
+
+
+> fairlaunch@0.1.0 test
+> mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test test/AuditRegressions.test.ts
+
+No contracts to compile
+Running Mocha tests
+
+
+  Audit regressions
+    ✔ F1: a late oversized bid cannot crowd out earlier bidders (295ms)
+    ✔ F2: status and price reflect clearing caused by time passing
+    ✔ F3: a cleared auction reports AwaitingFinalization once the window ends
+    ✔ F4: issuer proceeds are withdrawable at finalization without waiting for bidders
+
+
+  4 passing (329ms)
+
+
+4 passing (4 mocha)
+
