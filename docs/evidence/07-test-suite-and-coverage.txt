@@ -1,12 +1,13 @@
-# Full test suite with coverage
+# Full test suite with coverage (final)
 # Command: npm run coverage
-# Date: 2026-10-20T04:57Z
+# Date: 2026-10-20T05:17Z
 
 
-> fairlaunch@0.1.0 coverage
+> dutchpoint@0.1.0 coverage
 > mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test --coverage
 
-No contracts to compile
+
+Compiled 7 Solidity files with solc 0.8.28 (evm target: cancun)
 
 Running Solidity tests
 
@@ -25,14 +26,14 @@ Running Mocha tests
 
 
   Audit regressions
-    ✔ F1: a late oversized bid cannot crowd out earlier bidders (343ms)
+    ✔ F1: a late oversized bid cannot crowd out earlier bidders (368ms)
     ✔ F2: status and price reflect clearing caused by time passing
     ✔ F3: a cleared auction reports AwaitingFinalization once the window ends
     ✔ F4: issuer proceeds are withdrawable at finalization without waiting for bidders
 
   DutchPoint DutchAuction
     configuration
-      ✔ rejects invalid constructor parameters (44ms)
+      ✔ rejects invalid constructor parameters (146ms)
       ✔ only starts once, only by the owner, and only when funded
     price
       ✔ decays linearly over exactly 1,200 seconds
@@ -76,15 +77,22 @@ Running Mocha tests
     conservation
       ✔ accounts for every token and every wei across a full lifecycle
 
+  GavoraToken
+    ✔ is the Gavora (GVRA) ERC20 with 18 decimals and a fixed supply
+    ✔ exposes no mint function and no owner
+    ✔ rejects a zero initial supply
+    ✔ lets holders burn their own tokens, reducing total supply
+    ✔ does not let anyone burn another holder's tokens without an allowance
+
   Reentrancy demonstration
     ✔ drains a naive auction whose refund sends ETH before clearing the credit
     ✔ pays the same attacker only its own refund from DutchAuction
 
 
-  40 passing (1s)
+  45 passing (1s)
 
 
-47 passing (7 solidity, 40 mocha)
+52 passing (7 solidity, 45 mocha)
 
 Saved html report to coverage/html
 ╔════════════════════════════════════════════════════════════════════════════════╗
@@ -98,10 +106,10 @@ Saved html report to coverage/html
 ║ contracts/test/ReentrancyAttacker.sol │ 100.00 │ 100.00      │ -               ║
 ║ contracts/test/RejectingReceiver.sol  │ 85.71  │ 83.33       │ 29              ║
 ║ contracts/test/VulnerableAuction.sol  │ 100.00 │ 100.00      │ -               ║
-║ contracts/LaunchToken.sol             │ 75.00  │ 60.00       │ 22              ║
+║ contracts/GavoraToken.sol             │ 100.00 │ 100.00      │ -               ║
 ║ contracts/DutchAuction.sol            │ 100.00 │ 100.00      │ -               ║
 ╟───────────────────────────────────────┼────────┼─────────────┼─────────────────╢
-║ Total                                 │ 99.13  │ 98.92       │                 ║
+║ Total                                 │ 99.57  │ 99.64       │                 ║
 ╚═══════════════════════════════════════╧════════╧═════════════╧═════════════════╝
 
 

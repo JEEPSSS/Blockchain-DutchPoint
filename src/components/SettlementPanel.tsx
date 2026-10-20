@@ -71,7 +71,7 @@ export function SettlementPanel({
             The window has closed. Anyone can finalize: it fixes the price and burns unsold GVRA.
           </p>
           <button className="btn primary wide" onClick={onFinalize} disabled={disabled}>
-            Finalize auction
+            {canTransact ? "Finalize auction" : "Connect a wallet to finalize"}
           </button>
         </>
       )}

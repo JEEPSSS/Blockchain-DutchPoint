@@ -1,106 +1,86 @@
-# Assumptions, Ambiguities, And TA Questions
+# Assumptions, Ambiguities and TA Questions
 
-## Confirmed From The Brief
+None of the interpretations below has been approved by a TA. They are recorded so that the design
+choices are explicit and easy to change.
 
-- The project is a team development project for a group of two or three students.
-- Local deployment is acceptable for submission and demo.
-- The codebase must include a README that lets assessors deploy and run the solution.
-- The demo video must be no more than 10 minutes.
-- Option 2 requires ERC20 integration, a separate auction engine, a 20-minute Dutch auction, token claims, ETH refunds, burning of unsold tokens, and reentrancy discussion or demonstration.
+## Confirmed from the brief
 
-## No Companion-Document Conflicts Found
+- A team project of two or three students.
+- An ERC20 token plus separate auction contract(s); a 20-minute Dutch auction; a uniform clearing price;
+  token claims; ETH refunds for surplus bids; burning of unsold tokens; reentrancy resistance as a bonus.
+- An AI Audit Report with eight sections, and a four-part breakdown for every major issue.
+- Per the team's notes on `Document.pdf` / `Document 2.pdf`: local deployment is acceptable, the README
+  must let assessors deploy and run the project, and the demo video is at most 10 minutes.
 
-`Document.pdf` and `Document 2.pdf` confirm assessment and submission logistics. They do not add a different Dutch auction design. `project.pdf` remains the primary functional source.
+## 1. "Runs for exactly 20 minutes" vs. clearing early
 
-## Ambiguity 1: "Exactly 20 Minutes" Versus Early Clearing
+The brief says the auction runs for exactly 20 minutes, and also that it clears when committed capital
+meets the supply.
 
-The brief says the auction runs for exactly 20 minutes. It also says the auction clears when total committed capital meets total token supply.
+**Interpretation:**
+- Clearing locks the price and closes bidding as soon as it happens, whether through a crossing bid or
+  through time passing.
+- Finalization, claims and proceeds open at the 20-minute mark.
+- The window therefore always lasts exactly 20 minutes, and no transaction after clearing can change
+  the price.
 
-Question for TA:
+> TA question: if demand meets supply before 20 minutes, may settlement start immediately, or should it
+> wait for the 20-minute mark as implemented?
 
-> If sufficient capital is committed before the 20-minute deadline, should the auction stop accepting commitments immediately, or should it continue accepting commitments until exactly 20 minutes?
+## 2. "Automatically process ETH refunds"
 
-Initial implementation assumption:
+**Interpretation:**
+- The surplus of the bid that crosses the threshold is refunded **in the same transaction**.
+- If the bidder is a contract that rejects ETH, the refund is credited and can be withdrawn later with
+  `withdrawRefundTo` to any address. This means a rejecting bidder can never block the auction or
+  lose funds.
+- Under arrival-order filling, no other bidder has a surplus, so there is nothing else to refund.
 
-- The economic outcome can lock early when the clearing threshold is reached.
-- Contributions after economic clearing are rejected.
-- Participants cannot claim tokens, withdraw refunds, or let the issuer withdraw proceeds until the scheduled 1,200 second endpoint.
+> TA question: is an automatic refund with a pull fallback acceptable for "automatically process ETH
+> refunds"?
 
-Reason:
+## 3. A bid that crosses the clearing threshold
 
-- This preserves the "exactly 20 minutes" demonstration window for settlement while preventing later transactions from changing a price that should already have cleared.
+**Interpretation (changed after the audit):**
+- Earlier commitments are filled in full.
+- The crossing bid is accepted only up to the remaining capacity at the current price, and the rest
+  is refunded.
 
-This assumption has not been approved by the TA.
+The original Codex implementation shared the supply pro-rata among all bidders, which lets a late,
+oversized bid take most of the supply (audit finding F1).
 
-## Ambiguity 2: "Automatically Process Refunds" Versus Safe Withdrawals
+> TA question: is arrival-order filling the intended reading of "how to calculate claims when a bid
+> bridges across the clearing threshold"?
 
-The brief says token claims and refunds should be processed automatically. It also asks how to process refunds safely against reentrancy.
+## 4. Clearing through time passing
 
-Question for TA:
+If committed ETH would buy the whole supply at some price above the reserve, the auction clears at
+exactly that price, `ceil(totalCommitted / saleSupply)`, when the falling price reaches it - even if no
+transaction happens at that moment. Rounding up keeps total claims within the supply.
 
-> Is it acceptable for the contract to automatically calculate refund credits during settlement while requiring users to pull ETH refunds with a separate transaction?
+## 5. Rounding and dust
 
-Initial implementation assumption:
+- Token allocations round down. Leftover sub-unit dust (at most one token unit per bidder) is burned
+  once every bidder has claimed, so tokens still owed are never burned.
+- Accepted ETH is paid in full. Per-bidder rounding is worth less than `finalPrice / 1e18` wei, which is
+  under 1 wei at any price below 1 ETH per GVRA.
 
-- Refunds are calculated automatically and recorded as contract state.
-- ETH is transferred only through a user-triggered `withdrawRefundTo` function.
-- A failed ETH transfer does not erase refund credit.
+## 6. Issuer proceeds
 
-Reason:
+Proceeds equal all accepted ETH. The issuer can withdraw them once the auction is finalized. Refund
+credits are tracked separately, so proceeds can never consume ETH owed to bidders.
 
-- Push refunds can let one rejecting receiver block settlement.
-- Pull payments fit checks-effects-interactions and make reentrancy tests clearer.
+## Scope boundaries
 
-This assumption has not been approved by the TA.
+- One auction per deployment; parameters are immutable apart from `start()`.
+- Local Hardhat accounts and test ETH only; Sepolia is optional.
+- No allowlists, KYC, anti-sybil controls, upgradeability, factory, backend or cross-chain support.
 
-## Threshold-Crossing Bid Policy
+## Known limitations
 
-Question for TA:
-
-> When a contribution crosses the clearing threshold, should the excess ETH be rejected immediately, partially accepted, or accepted as budget and refunded later?
-
-Initial implementation assumption:
-
-- The full contribution is accepted as a budget commitment.
-- The final clearing price locks at the current auction price.
-- Tokens are allocated pro-rata by total committed ETH in a cleared sale.
-- Surplus ETH becomes refund credit.
-
-Reason:
-
-- It is deterministic, simple for students to explain, and keeps every successful participant at the same final price.
-
-This assumption has not been approved by the TA.
-
-## Rounding And Dust
-
-Assumption:
-
-- On-chain arithmetic uses integer token units and wei.
-- Token allocations round down.
-- Accepted ETH cost rounds up so the participant pays for the exact token units received.
-- Clearly unsold inventory is burned at finalization.
-- Any residual token dust caused by per-account flooring is burned only after every recorded participant has settled.
-
-Reason:
-
-- Burning all leftover tokens immediately after finalization could burn tokens owed to users who have not claimed.
-- Burning only after all participants settle preserves claim-order independence.
-
-## Scope Boundaries
-
-Assumptions:
-
-- One auction per deployment is enough.
-- The token is minted once at deployment; there is no later mint function.
-- Auction configuration is immutable after deployment except for `start()`, which only records `startTime` after verifying inventory funding.
-- Local Hardhat accounts and test ETH are used only.
-- No real funds, testnet faucets, or paid services are required.
-
-## Known Limitations To Disclose
-
-- Issuer proceeds become withdrawable as participants settle. This avoids unbounded loops and protects refunds, but it means proceeds from a participant who never settles remain in the contract.
-- A contract participant that rejects ETH must call `withdrawRefundTo` with a recipient address able to receive ETH. If that contract has no such method, its refund may remain stuck by its own design.
-- The frontend is a local educational dashboard, not a production launch platform.
-- The auction does not implement allowlists, KYC, anti-sybil controls, upgradeability, or multi-auction management.
-
+- A bidder who never claims leaves their GVRA in the auction contract. It remains claimable forever,
+  and rounding dust cannot be burned until that bidder claims.
+- Many tiny bids from distinct addresses can delay the dust burn in the same way. Only rounding dust is
+  affected, never anyone's allocation.
+- At wei-scale prices (a few wei per token), rounding the time-clearing price up to a whole wei can leave
+  a small share of supply unsold. This is irrelevant at realistic prices, and it is covered by a test.

@@ -1,129 +1,56 @@
-# FairLaunch Demo Script
+# DutchPoint Demo Script (target 8-9 minutes)
 
-Target length: 8-10 minutes.
+**Setup before recording**
+- `npm run node` (terminal 1), then `npm run deploy:local` and `npm run dev` (terminal 2).
+- In MetaMask, import two Hardhat test accounts: #0 is the issuer and #4 is the bidder ("Dave").
+- Have `npm run seed:local` ready. Reset MetaMask activity data if the node was restarted.
 
-## 0:00-1:00 - Architecture Intro
+## 0:00-0:45 - Introduction
 
-- Show `contracts/LaunchToken.sol` and `contracts/DutchAuction.sol`.
-- Explain separation of token logic and auction logic.
-- Explain the two documented assumptions:
-  - Early clearing can lock outcome, settlement waits for 1,200 seconds.
-  - Refunds are calculated automatically but withdrawn safely by users.
+> "This is **DutchPoint: A Decentralized Dutch Auction Platform**. Falling prices. One clearing price.
+> We're launching the Gavora token - GVRA, from 'gavel'. Connect your wallet to DutchPoint and bid for
+> Gavora tokens using ETH."
 
-## 1:00-2:00 - Run Checks
+Show the dashboard. Point out the price range, the 20-minute countdown and the three-step
+explanation at the bottom.
 
-Show:
+## 0:45-2:00 - Architecture
 
-```bash
-npm run test
-npm run build
-```
+- Show `contracts/GavoraToken.sol`: fixed supply, burnable, no mint, no owner.
+- Show `contracts/DutchAuction.sol`: `contribute`, `finalize`, `claimTokens`, and `clearingState`.
+- One sentence on the rule: earlier bids are filled first; the bid that sells out only buys what's
+  left and gets its surplus back immediately; everyone pays the same price.
 
-Mention:
+## 2:00-4:00 - Live auction
 
-- 18 contract tests pass.
-- Frontend builds.
-- Slither was unavailable locally and is recorded as not run.
+1. Run `npm run seed:local`. Alice, Bob and Carol bid; the bid history and demand meter update.
+2. Connect as Dave. Point at the quote: "You receive at least …" - the allocation can only grow.
+3. Click **Sell-out**, then add 1 ETH and bid. Point out the green callout: the extra ETH comes back in
+   the same transaction. The status flips to *Sold out*, the chart marks the clearing point, and the
+   history tags Dave's bid *Cleared*.
 
-## 2:00-3:00 - Local Frontend Setup
+## 4:00-5:00 - Settlement
 
-Terminal 1:
+1. Click **+20 min** in *Local demo tools*. The status becomes *Ready to finalize*.
+2. Click **Finalize auction**, then **Claim** - GVRA arrives in Dave's wallet.
+3. Switch MetaMask to the issuer and click **Withdraw proceeds** - exactly the accepted ETH.
 
-```bash
-npm run node
-```
+## 5:00-6:00 - Undersubscribed sale and burn
 
-Terminal 2:
+Run `npm run demo` and show scenario 2: a sale that ends at the reserve price, with 800 GVRA burned and
+the total supply reduced.
 
-```bash
-npm run deploy:local
-npm run dev
-```
+## 6:00-7:30 - Security
 
-Open the Vite URL and connect MetaMask to chain `31337`.
+1. In the `npm run demo` output, show scenarios 4 and 5: the same attacker drains **11 ETH** from the
+   deliberately vulnerable auction, but gets only its own **0.75 ETH** refund from DutchPoint.
+2. Briefly show `npm test` (52 passing) and the coverage table, then the Slither summary in
+   `docs/evidence/08-slither.txt`.
 
-## 3:00-4:30 - Successful Sale
+## 7:30-9:00 - AI audit highlights
 
-Use the deterministic script output or frontend interactions to show:
-
-- Alice, Bob, and Carol commit ETH.
-- A crossing contribution locks a clearing price before the deadline.
-- Finalization is only available at the 20-minute endpoint.
-- All participants pay the same final price.
-- Surplus ETH is available as refund credit.
-
-Command evidence:
-
-```bash
-npm run demo
-```
-
-Expected output includes:
-
-```text
-Successful sale with surplus refunds
-Final price: 0.01125 ETH/token
-Tokens sold: 1000.0 FAIR
-```
-
-## 4:30-5:45 - Undersubscribed Sale
-
-Show:
-
-- Only 1 ETH is committed.
-- Auction reaches reserve without clearing the full supply.
-- Participant receives 200 FAIR at 0.005 ETH/token.
-- 800 FAIR burns as unsold inventory.
-
-Expected output includes:
-
-```text
-Undersubscribed sale with token burn
-Tokens claimed: 200.0 FAIR
-Tokens burned: 800.0 FAIR
-```
-
-## 5:45-7:00 - Safe Refund Failure
-
-Show:
-
-- `RejectingReceiver` rejects direct ETH.
-- Failed refund transfer does not erase credit.
-- The receiver withdraws to an alternate recipient.
-
-Expected output includes:
-
-```text
-Rejected direct refund preserved credit: 0.75 ETH
-Alternate recipient refund credit after withdrawal: 0 wei
-```
-
-## 7:00-8:15 - Reentrancy Attempt
-
-Show:
-
-- `ReentrantRefundAttacker` tries to reenter refund withdrawal.
-- `ReentrancyGuard` blocks the nested withdrawal.
-- Outer refund completes once.
-
-Expected output includes:
-
-```text
-Reentry succeeded: false
-Remaining attacker refund credit: 0 wei
-```
-
-## 8:15-9:30 - Audit And Limitations
-
-Open:
-
-- `docs/ai-audit-report.md`
-- `docs/assumptions.md`
-- `docs/requirements-checklist.md`
-
-Mention:
-
-- No TA approval has been claimed for ambiguous requirements.
-- Issuer proceeds accrue as users settle to avoid unbounded loops.
-- This is a local educational dApp, not a production token sale.
-
+Open `docs/ai-audit-report.md`:
+- F1: the AI's pro-rata rule let a whale take 91% of the supply. Show `docs/evidence/02` vs. `04`.
+- Show the failing-then-passing regression tests (`docs/evidence/01` → `03`).
+- Close with the main lesson: AI handled the stated requirements well, but missed adversarial
+  economics and cross-layer bugs, which only tests and a second model caught.

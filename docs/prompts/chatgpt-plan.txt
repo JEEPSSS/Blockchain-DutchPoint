@@ -1,0 +1,259 @@
+Dutch Auction Summary
+
+Project Identity
+- Platform: DutchPoint
+- Token: Gavora
+- Suggested ticker: GAV or GVR
+- Concept: A decentralized Ethereum dApp for launching the Gavora token through a 20-minute uniform-price Dutch auction.
+
+Core Auction Flow
+1. Auction starts with a high token price.
+2. The price decreases over time.
+3. Users connect a wallet and commit ETH.
+4. Demand accumulates as the price falls.
+5. The auction clears once total demand is enough to consume the available Gavora supply.
+6. The current price becomes the final clearing price.
+7. All successful bidders pay the same final clearing price.
+8. Users claim Gavora tokens.
+9. Any excess ETH is refunded.
+10. If the 20-minute auction ends before all tokens are sold, unsold Gavora tokens are burned.
+
+Planned Smart Contract Architecture
+
+1. GavoraToken.sol
+- ERC-20 token contract.
+- Token name: Gavora.
+- Suggested symbol: GAV or GVR.
+- Handles standard ERC-20 functionality.
+- Controls minting / initial auction supply.
+- Supports burning of unsold auction tokens.
+
+2. DutchAuction.sol
+Main responsibilities:
+- Auction start time.
+- Auction end time.
+- Starting price.
+- Reserve / minimum price.
+- Current price calculation.
+- ETH commitments from users.
+- Total committed ETH.
+- Clearing condition.
+- Final clearing price.
+- User token allocations.
+- User refunds.
+- Token claiming.
+- Refund withdrawal.
+- Auction finalization.
+- Burning unsold tokens.
+
+Price Mechanism
+- Use block.timestamp to determine the current auction price.
+- A simple linear decay is preferred because it is easy to explain, test, and audit.
+
+Conceptually:
+
+P(t) = P_start - ((P_start - P_reserve) * elapsedTime / auctionDuration)
+
+Where:
+- P_start = starting token price
+- P_reserve = minimum price
+- elapsedTime = current time - start time
+- auctionDuration = 20 minutes
+
+The price should never drop below the reserve price.
+
+Bidding Model
+- Users connect with MetaMask or another wallet.
+- Users submit ETH to the auction contract.
+- The contract records each user's commitment.
+- ETH commitments are pooled as auction demand.
+- Users do not necessarily buy immediately at the displayed price.
+- The final amount they pay is based on the uniform clearing price.
+
+Clearing Logic
+- A fixed amount of Gavora is offered in the auction.
+- As the price decreases, the same total committed ETH represents more token demand.
+- When total demand is enough to consume the available token supply, the auction clears.
+- The current price at that moment becomes the final clearing price.
+
+Important Edge Case: Final Bidder
+Example:
+- Only 100 GAV remain.
+- The final bidder's ETH would buy 150 GAV.
+
+The contract should:
+- Allocate only the remaining 100 GAV.
+- Calculate how much ETH is actually needed.
+- Refund the excess ETH.
+- Close / finalize the auction.
+
+Claims
+Prefer a pull-based design instead of pushing tokens to every bidder.
+
+Flow:
+- Auction finalizes.
+- Each user's allocation becomes claimable.
+- Each user calls claimTokens().
+- This avoids looping over all bidders and reduces gas risk.
+
+Refunds
+Prefer a pull-payment model.
+
+Flow:
+- Contract records each user's refundable ETH.
+- User calls withdrawRefund().
+- Contract transfers the refund only when requested.
+
+This avoids expensive mass-refund loops.
+
+Reentrancy Protection
+Refund logic must be protected.
+
+Preferred pattern:
+1. Checks
+2. Effects
+3. Interactions
+
+Example concept:
+- Check the user has a refund.
+- Set their refund balance to zero.
+- Only then send ETH.
+
+Also consider OpenZeppelin ReentrancyGuard.
+
+A good AI Audit demonstration:
+1. Start with an intentionally vulnerable refund implementation.
+2. Show how a reentrancy attack could exploit it.
+3. Identify the issue during the audit.
+4. Fix it using Checks-Effects-Interactions and/or ReentrancyGuard.
+5. Add a test proving the attack fails after the fix.
+
+Unsold Token Handling
+If the auction reaches 20 minutes without selling out:
+- Auction ends.
+- Reserve price is reached.
+- Remaining Gavora tokens are unsold.
+- Unsold tokens are permanently burned.
+
+Frontend Plan
+The frontend should look like a real token launch platform rather than a plain university demo.
+
+Suggested main dashboard:
+- DutchPoint branding.
+- Gavora token sale title.
+- Current price.
+- Time remaining.
+- Tokens remaining.
+- Total ETH committed.
+- Price-vs-time chart.
+- ETH bid input.
+- Place Bid button.
+- User wallet status.
+- User committed ETH.
+- Estimated allocation.
+- Claimable tokens.
+- Refund status.
+
+After clearing:
+- Final clearing price.
+- User allocation.
+- Refund amount.
+- Claim GAV button.
+- Claim Refund button.
+
+Wallet Integration
+- Connect wallet.
+- Detect user address.
+- Display ETH balance.
+- Submit bids through the wallet.
+- Sign transactions.
+- Read auction state from the smart contract.
+
+Likely Contract State
+- IERC20 public gavora
+- uint256 public startTime
+- uint256 public endTime
+- uint256 public startPrice
+- uint256 public reservePrice
+- uint256 public tokenSupply
+- uint256 public totalCommitted
+- bool public finalized
+- uint256 public clearingPrice
+- mapping(address => uint256) public commitments
+- mapping(address => uint256) public allocations
+- mapping(address => uint256) public refunds
+
+Likely Functions
+- startAuction()
+- getCurrentPrice()
+- bid()
+- finalizeAuction()
+- calculateAllocation()
+- claimTokens()
+- withdrawRefund()
+- burnUnsoldTokens()
+
+Security / AI Audit Topics
+Important issues to test and document:
+- Reentrancy during refunds.
+- Missing or incorrect access control.
+- Unauthorized minting.
+- Unauthorized auction finalization.
+- Rounding and integer-division errors.
+- Incorrect clearing-price calculation.
+- Final bidder exceeding remaining supply.
+- Double claiming of tokens.
+- Double claiming of refunds.
+- Bidding before the auction starts.
+- Bidding after the auction ends.
+- Incorrect timestamp boundary handling.
+- Gas-heavy loops over bidders.
+- Incorrect token burn permissions.
+- Auction being finalized more than once.
+- ETH becoming permanently stuck.
+- Incorrect handling of partial fills.
+
+Testing Plan
+At minimum, test:
+- Auction initializes correctly.
+- Price decreases over time.
+- Price never falls below reserve.
+- Users can bid during the auction.
+- Users cannot bid before start.
+- Users cannot bid after end.
+- Auction clears correctly.
+- Final threshold bidder is handled correctly.
+- All winners pay the same clearing price.
+- Refund math is correct.
+- Tokens cannot be claimed twice.
+- Refunds cannot be claimed twice.
+- Unsold tokens burn correctly.
+- Unauthorized users cannot mint.
+- Unauthorized users cannot finalize.
+- Reentrancy attack fails.
+
+Recommended Tooling
+- Solidity
+- OpenZeppelin contracts
+- Hardhat or Foundry
+- Slither
+- MetaMask
+- Ethereum testnet
+- React / web frontend
+
+What Makes the Project Strong
+The goal is not to add many random features. The goal is to execute the core auction extremely well.
+
+DutchPoint should demonstrate:
+- Correct Dutch auction mechanics.
+- Uniform clearing price.
+- Secure ETH refund logic.
+- Clean ERC-20 integration.
+- Good smart contract architecture.
+- Strong security testing.
+- Polished frontend UX.
+- Clear documentation.
+- Strong AI Audit Report.
+
+Project Pitch
+DutchPoint is a decentralized token-launch platform that distributes the Gavora token through a 20-minute uniform-price Dutch auction, providing transparent price discovery, fair allocation, secure refunds, and protection against common smart-contract vulnerabilities.

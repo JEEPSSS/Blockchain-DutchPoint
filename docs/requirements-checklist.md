@@ -1,33 +1,23 @@
-# Requirement-To-Test Checklist
+# Requirement → Implementation → Evidence
 
-| Requirement | Implementation | Test / Evidence |
+| Requirement (brief, Option 2) | Implementation | Evidence |
 | --- | --- | --- |
-| ERC20 project token | `LaunchToken.sol` extends OpenZeppelin ERC20 and mints fixed supply once | `settles an undersubscribed sale...`, `handles no contributors...` |
-| Auction logic separate from token logic | `DutchAuction.sol` manages sale, `LaunchToken.sol` manages token | Compile and deployment fixtures |
-| Accept ETH commitments | `contribute()` and `receive()` | `rejects contributions before opening and after closing`, contribution-heavy tests |
-| Deterministic descending price | `priceAt()` linear decay | `uses the required 1,200 second duration...` |
-| Reserve floor | `priceAt()` returns reserve after deadline | `is monotonic and never falls below reserve` |
-| Exactly 1,200 seconds | `AUCTION_DURATION = 1200` | `uses the required 1,200 second duration...` |
-| Uniform final price | `finalPrice` stored once and used for settlement | `applies one uniform final price...` |
-| Crossing threshold | Full crossing contribution accepted as budget; surplus refunded | `credits surplus refunds when a contribution crosses...` |
-| Time-only clearing | `_syncTimeClearing()` reconstructs earliest valid clearing after latest commitment | `detects clearing caused by time passing...` |
-| Settlement delayed until endpoint | `finalize()` only after `startTime + 1200` | `locks clearing before the deadline...` |
-| Token claims | `claimTokens()` | Claim tests and demo |
-| Safe ETH refunds | `withdrawRefundTo()` pull refunds | `preserves refund credit when a receiver rejects ETH...` |
-| No duplicate claims/withdrawals | `settled` and refund-credit accounting | `prevents duplicate claims...` |
-| Burn unsold tokens | Burn obvious unsold at finalization and residual dust after all settle | `handles no contributors...`, `settles an undersubscribed sale...`, `handles tiny commitments...` |
-| Do not burn owed tokens | Residual burn gated by `settledParticipantCount == participantCount` | `handles tiny commitments...`, `conserves tracked ETH...` |
-| Reentrancy resistance | `ReentrancyGuard`, CEI, pull payments | `blocks a malicious receiver...` |
-| Avoid unbounded bidder loops | Settlement and burning are per-user or aggregate checks | Code review; no tests rely on participant iteration |
-| Reject unauthorized actions | OpenZeppelin `Ownable` | `enforces owner-only start and proceeds withdrawal` |
-| No contributors | Finalization burns entire sale inventory | `handles no contributors...` |
-| Partial sale at reserve | Deadline settlement at reserve when not cleared | `settles an undersubscribed sale...` |
-| Multiple contributions | Commitments aggregate by wallet | `aggregates multiple contributions...` |
-| Rounding and dust | Floor token units, ceil accepted ETH, burn residual after all settle | `handles tiny commitments...` |
-| Conservation | Tracked ETH and token accounting checks | `conserves tracked ETH...` |
-| Frontend wallet and network state | React dashboard with MetaMask and wrong-network UI | `npm run typecheck`, `npm run build` |
-| Price chart and countdown | React/SVG display-only chart and timer | `npm run build`; manual demo flow |
-| Deployment script | `scripts/deploy-local.ts` | README local deployment instructions |
-| Deterministic demo | `scripts/demo.ts` | `npm run demo` |
-| AI audit evidence | `docs/ai-development-log.md`, `docs/ai-audit-report.md` | Documentation |
-
+| ERC20 project token | `GavoraToken` (OpenZeppelin ERC20), fixed supply, no mint, no owner | `GavoraToken.test.ts` |
+| Auction engine in separate contract(s) | `DutchAuction` holds the sale inventory; `GavoraToken` holds token logic | Deployment fixtures; `scripts/deploy.ts` |
+| Bid for tokens using Ether | `contribute()` and plain transfers via `receive()` | `accepts plain ETH transfers…`, bidding tests |
+| Descending price via a decay function | `priceAt()`: linear decay on `block.timestamp`, floored at reserve | `decays linearly over exactly 1,200 seconds`, `is monotonic and never falls below reserve`, fuzz `testFuzz_PriceIsMonotonicAndBounded` |
+| Exactly 20 minutes | `AUCTION_DURATION = 20 minutes`; bids rejected at `endTime`; finalize only from `endTime` | `rejects contributions… after closing`, `rejects early and repeated finalization` |
+| Clears when committed ETH meets supply | Crossing bid clears at the current price; time-based clearing at `ceil(C/S)` | `accepts a crossing bid only up to capacity…`, `finds the exact clearing point…`, fuzz `testFuzz_TimeClearingPriceIsExact` |
+| Bid that bridges the threshold | Accepted up to capacity; surplus refunded in the same transaction | Regression F1; `docs/evidence/04` |
+| Uniform clearing price | `tokens = commitment / finalPrice` for everyone | `fills earlier bidders in full and charges everyone the same final price`, invariant `invariant_ClaimsUseOneUniformPrice` |
+| Excess ETH refunded automatically | Push refund with credit fallback; `withdrawRefundTo` | `credits the surplus when a bidder rejects ETH…`, demo scenario 3 |
+| Sell out at/above reserve or burn unsold | `finalize()` burns `S − totalTokensSold`; dust burned after all claims | `burns the full inventory when nobody bids`, `settles an undersubscribed sale…`, `burns rounding dust only after every participant has claimed` |
+| Burned permanently from supply | `ERC20Burnable.burn` reduces `totalSupply` | `GVRA totalSupply` checks; invariant `invariant_TokensAreConserved` |
+| Token claims | `claimTokens()` once per bidder | `rejects claims before finalization, without a commitment, and twice` |
+| Safe ETH handling | Checks-effects-interactions, `ReentrancyGuard`, separate refund/proceeds accounting | Invariant `invariant_EthIsFullyBacked`; `keeps credited refunds solvent…` |
+| (Bonus) Reentrancy resistance | As above | `Reentrancy.test.ts`; `docs/evidence/05`; Slither `docs/evidence/08` |
+| Access control | `Ownable`: only the issuer can `start` and withdraw proceeds | `only starts once, only by the owner…`, `lets only the owner withdraw…` |
+| Frontend | React dashboard: wallet, live price/countdown, chart, bid form, position, settlement, history | `npm run build`; e2e screenshots in `docs/screenshots/` |
+| AI Audit Report | `docs/ai-audit-report.md` | Evidence in `docs/evidence/`, prompts in `docs/prompts/` |
+| README to deploy and run | `README.md` | Quick start verified on a fresh local node |
+| Demo video ≤ 10 minutes | `docs/demo-script.md` | `npm run demo` |

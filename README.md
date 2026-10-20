@@ -1,126 +1,136 @@
-# FairLaunch
+# DutchPoint
 
-FairLaunch is an educational SC4053 Blockchain Technology development project for Option 2, Dutch Auction. It implements a local Ethereum token launch with a descending price, one final clearing price, ERC20 token claims, safe ETH refund withdrawals, and burning of unsold inventory.
+**DutchPoint: A Decentralized Dutch Auction Platform** - *Falling prices. One clearing price.*
 
-## Stack
+DutchPoint launches the **Gavora (GVRA)** ERC20 token through a 20-minute uniform-price Dutch auction on
+Ethereum. Connect your wallet to DutchPoint and bid for Gavora tokens using ETH:
 
-- Solidity `0.8.28`
-- OpenZeppelin Contracts `5.6.1`
-- Hardhat `3.18.0` with TypeScript, Mocha, and ethers
-- React `19`, Vite `8`, TypeScript, ethers `6`
-- MetaMask on a local Hardhat network
+- the price falls in a straight line from a high start price to a reserve price over exactly 20 minutes;
+- bidders commit ETH whenever the price looks fair, and as the price keeps falling the same ETH buys more GVRA;
+- the moment committed ETH can buy the whole supply, the auction sells out. The bid that crosses the
+  line only buys what is left, and its surplus ETH is refunded in the same transaction;
+- every winner pays the **same clearing price**, however early they bid;
+- if the window ends first, everyone pays the reserve price and unsold GVRA is **burned**.
 
-## Install
+SC4053 Blockchain Technology, AY2026-27 Semester 1 - Development Project, Option 2.
+
+![DutchPoint dashboard](docs/screenshots/01-live-auction.png)
+
+## Quick start (local)
+
+Requirements: Node.js 22+ and MetaMask (or another browser wallet).
 
 ```bash
 npm install
+npm run node            # terminal 1: local chain on 127.0.0.1:8545, mines a block every 2 s
+npm run deploy:local    # terminal 2: deploys GavoraToken + DutchAuction and starts the auction
+npm run dev             # terminal 2: http://127.0.0.1:5173
 ```
 
-The project uses a dependency lockfile. Hardhat scripts redirect their small home/config writes into `.hardhat-home/` so local commands do not need access to user-level preference folders.
+Optional: `npm run seed:local` places three bids from test accounts, so the dashboard has history.
 
-## Verify
+**MetaMask:** open the app and click *Connect wallet*. If prompted, let the app add the
+**Hardhat Local** network (RPC `http://127.0.0.1:8545`, chain ID `31337`). Import one of the private keys
+printed by `npm run node`; these are public test keys - never use them elsewhere. After restarting the
+node, use MetaMask's *Settings → Advanced → Clear activity tab data* so nonces reset.
+
+**Skipping time in a demo:** the *Local demo tools* card (shown only on the local chain) moves the
+chain clock forward 1-20 minutes. The command-line equivalent is `ADVANCE_SECONDS=600 npm run time:advance`.
+
+## Deterministic demo
 
 ```bash
-npm run compile
-npm run test
-npm run typecheck
-npm run build
 npm run demo
 ```
 
-Current verified result:
+It runs five scenarios on an in-process chain and prints the results:
+1. a sale that clears early, with the crossing bid's surplus refunded automatically;
+2. an undersubscribed sale settling at reserve, with unsold GVRA burned;
+3. a contract bidder that rejects ETH and keeps its refund as a withdrawable credit;
+4. a reentrancy attack draining a deliberately vulnerable auction;
+5. the same attack failing against DutchPoint.
 
-- Contract tests: 18 passing.
-- Frontend typecheck: passing.
-- Production build: passing. Vite reports a chunk-size warning because ethers is bundled.
-- Deterministic demo: passing.
-- Slither: not installed in this environment, so static analysis could not be executed locally.
+The narrated video plan is in [`docs/demo-script.md`](docs/demo-script.md).
 
-## Local Deployment And Frontend
+## Testing and security
 
-Terminal 1:
+| Command | What it runs |
+| --- | --- |
+| `npm test` | All 52 tests: 45 Mocha tests, plus 3 Solidity fuzz tests (1,000 runs each) and 4 invariants (256 runs, depth 50) |
+| `npm run coverage` | Same, with coverage - `DutchAuction.sol` and `GavoraToken.sol` are at 100% lines and statements |
+| `npm run slither` | Slither static analysis; fails on any Medium or High finding (needs `slither-analyzer` and `solc` 0.8.28) |
+| `npm run typecheck` / `npm run build` | Frontend and script type checks; production build |
+
+Install Slither with `uv tool install --python 3.12 slither-analyzer` (or `pip install slither-analyzer`), then
+`solc-select install 0.8.28 && solc-select use 0.8.28`.
+
+CI (`.github/workflows/ci.yml`) runs all of the above on every push and pull request.
+
+## Optional: Sepolia testnet
+
+Not needed for testing or the demo. A public deployment adds Etherscan links as evidence.
 
 ```bash
-npm run node
+npm run keystore -- set SEPOLIA_RPC_URL        # e.g. an Alchemy/Infura Sepolia URL
+npm run keystore -- set SEPOLIA_PRIVATE_KEY    # a throwaway wallet holding Sepolia test ETH
+npm run keystore -- set ETHERSCAN_API_KEY      # only for source verification
+npm run deploy:sepolia
 ```
 
-Terminal 2:
+The script prints Etherscan links and verification commands, and records addresses and transaction
+hashes in `deployments/sepolia.json`. To have the frontend default to Sepolia, set
+`VITE_DEFAULT_CHAIN_ID=11155111` (and optionally `VITE_READ_RPC_URL`) in `.env`. `START_AUCTION=false`
+deploys without starting, so the issuer can start the 20-minute window from the UI later.
 
-```bash
-npm run deploy:local
-npm run dev
-```
-
-The deployment script:
-
-1. Deploys `LaunchToken`.
-2. Deploys `DutchAuction`.
-3. Transfers the full sale supply into the auction.
-4. Starts the auction.
-5. Writes local addresses and ABIs into `src/generated/`.
-
-Open the Vite URL printed by `npm run dev`, usually:
+## Project structure
 
 ```text
-http://127.0.0.1:5173
+contracts/
+  GavoraToken.sol          ERC20 "Gavora" (GVRA): fixed supply, burnable, no owner, no mint
+  DutchAuction.sol         The auction engine
+  test/                    Test-only helpers: ReentrancyAttacker, RejectingReceiver,
+                           VulnerableAuction (deliberately vulnerable)
+test/
+  DutchAuction.test.ts     Scenario and unit tests
+  AuditRegressions.test.ts Regression tests for audit findings F1-F4
+  Reentrancy.test.ts       Vulnerable vs. secure reentrancy demonstration
+  GavoraToken.test.ts      Token tests
+  solidity/                Fuzz and invariant tests (forge-std)
+scripts/                   deploy, demo, seed-local, advance-time, poc-crowd-out
+src/                       React + Vite frontend (components/, hooks/, lib/)
+docs/                      Spec, architecture, assumptions, AI audit report, evidence, screenshots
 ```
 
-## MetaMask Setup
+## How the contracts work
 
-Add a local network:
-
-- RPC URL: `http://127.0.0.1:8545`
-- Chain ID: `31337`
-- Currency symbol: `ETH`
-
-Import one or more private keys printed by `npm run node`. These are local test accounts only.
-
-## Demo Under 10 Minutes
-
-Run:
-
-```bash
-npm run demo
-```
-
-The deterministic script demonstrates:
-
-1. Successful sale with surplus refunds.
-2. Undersubscribed sale with token burning.
-3. A refund recipient that rejects ETH without blocking settlement.
-4. A blocked refund reentrancy attempt.
-
-For a narrated video, follow `docs/demo-script.md`.
-
-## Core Contracts
-
-- `contracts/LaunchToken.sol`: fixed-supply ERC20 token with burn support.
-- `contracts/DutchAuction.sol`: one-shot auction engine.
-- `contracts/RejectingReceiver.sol`: test-only rejecting refund receiver.
-- `contracts/ReentrantRefundAttacker.sol`: test-only reentrancy attacker.
-
-## Important Policy Assumptions
-
-These assumptions are documented for TA review and have not been approved:
-
-- Early economic clearing may lock the auction outcome, while claims and withdrawals remain unavailable until the scheduled 1,200 second endpoint.
-- Refunds are calculated automatically but transferred through safe user-triggered withdrawals.
-- A threshold-crossing contribution is fully accepted as budget, and surplus is credited as refund after settlement.
-
-## Known Limitations
-
-- Issuer proceeds become withdrawable as participants settle. This avoids bidder loops and protects refunds, but proceeds from a participant who never settles remain in the contract.
-- A contract participant that rejects ETH must call `withdrawRefundTo` with a recipient capable of receiving ETH.
-- The frontend is a local educational dashboard, not a production token-sale platform.
-- No allowlist, KYC, factory, upgradeability, testnet deployment, oracle, backend, or cross-chain support is included.
+- **`GavoraToken`** mints its whole supply once to the deployer, who transfers the sale supply into the
+  auction. There is no mint function and no owner, so the supply can only go down (by burning).
+- **`DutchAuction`**:
+  - `start()` (issuer only) opens the 20-minute window.
+  - `contribute()` / plain ETH transfers place bids.
+  - `finalize()` (anyone, after the window) fixes the price and burns unsold GVRA.
+  - `claimTokens()` pays each bidder `commitment / finalPrice` GVRA.
+  - `withdrawRefundTo()` is a fallback for refunds a bidder contract rejected.
+  - `withdrawIssuerProceeds()` (issuer only) withdraws the sale revenue.
+  - `burnRemainderAfterAllClaimed()` burns rounding dust.
+- There are no loops over bidders. Refunds follow checks-effects-interactions behind `ReentrancyGuard`.
+- The maths, including the exact clearing price when time alone clears the auction, is in
+  [`docs/spec.md`](docs/spec.md).
 
 ## Documentation
 
-- `docs/spec.md`: requirements, auction math, examples, and conservation rules.
-- `docs/architecture.md`: contract/frontend/test architecture.
-- `docs/assumptions.md`: ambiguities and TA questions.
-- `docs/requirements-checklist.md`: requirement-to-feature-to-test map.
-- `docs/ai-audit-report.md`: draft AI audit report.
-- `docs/ai-development-log.md`: factual development log and evidence.
-- `docs/demo-script.md`: under-10-minute demo plan.
+| Document | Contents |
+| --- | --- |
+| [`docs/ai-audit-report.md`](docs/ai-audit-report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence) |
+| [`docs/evidence/`](docs/evidence/) | Before/after test logs, PoC output, mutation check, coverage, Slither |
+| [`docs/prompts/`](docs/prompts/README.md) | Prompt logs for ChatGPT, Codex and Claude Code |
+| [`docs/spec.md`](docs/spec.md) | Requirements and auction mathematics |
+| [`docs/architecture.md`](docs/architecture.md) | Contract, frontend and test architecture |
+| [`docs/assumptions.md`](docs/assumptions.md) | Interpretations of ambiguous requirements and questions for the TA |
+| [`docs/requirements-checklist.md`](docs/requirements-checklist.md) | Requirement → implementation → test |
+| [`docs/demo-script.md`](docs/demo-script.md) | Under-10-minute demo plan |
+| [`docs/ai-development-log.md`](docs/ai-development-log.md) | Chronological AI development log |
 
+## Team
+
+**TODO (team):** names, matriculation numbers and responsibilities.

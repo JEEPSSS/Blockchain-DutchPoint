@@ -165,3 +165,45 @@ Add command outputs here after they are actually run.
 - Why it matters: Demo failed despite correct contract behavior.
 - What changed: Demo checks auction token balance before calling `burnRemainderAfterAllSettled`.
 - Evidence the fix works: `npm run demo` completes.
+
+## 2026-10-20 - Cross-model review and remediation (Claude Code)
+
+Tool: Claude Code VS Code extension, model Claude Opus 5.5. Prompts are reproduced verbatim in
+[`prompts/claude-code-session.md`](prompts/claude-code-session.md).
+
+Inputs reviewed: the brief, the ChatGPT plan ([`prompts/chatgpt-plan.txt`](prompts/chatgpt-plan.txt)), and
+this repository at `0a75a78` (18 tests passing).
+
+Key observation: the two AI tools disagreed on the threshold-crossing bid. ChatGPT allocated only the
+remaining supply to the final bidder; Codex shared the supply pro-rata. A proof of concept showed the
+pro-rata rule lets a late 100 ETH bid take 90.9% of the supply (finding F1).
+
+Team decisions recorded during the session: platform DutchPoint, token Gavora (GVRA), title
+"DutchPoint: A Decentralized Dutch Auction Platform", tagline "Falling prices. One clearing price.";
+adopt arrival-order filling; Sepolia optional.
+
+| Commit | Change |
+| --- | --- |
+| `35253ce` | Regression tests F1-F4 and crowd-out PoC; all four fail on the original code (`evidence/01`, `02`) |
+| `20e24b1` | Fill-order allocation with same-transaction surplus refund, exact time-clearing price, correct `status()`/`currentPrice()`, proceeds at finalization (`evidence/03`, `04`) |
+| `031b753` | Vulnerable vs. secure reentrancy demonstration (`evidence/05`) |
+| `7d4a531` | Solidity fuzz and invariant suite, mutation check, edge-case tests, coverage (`evidence/06`, `07`) |
+| `1ba8883` | Rebrand to DutchPoint / GavoraToken (GVRA); token without owner |
+| `2c450c4` | Slither config and triage, CI workflow (`evidence/08`) |
+| `4c991e6` | Network-agnostic deploy script, optional Sepolia, time helper |
+| `c689e3c` | Frontend rebuild, end-to-end UI run, screenshots |
+
+### Verification log (2026-10-20)
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run test -- test/AuditRegressions.test.ts` on `0a75a78` contracts | 4 failing | Expected: proves F1-F4 exist |
+| `npm run test` | 52 passing | 45 Mocha, 7 Solidity (3 fuzz × 1,000 runs, 4 invariants × 256 runs) |
+| `npm run coverage` | 100% lines/statements | `DutchAuction.sol`, `GavoraToken.sol` |
+| Mutation check (M1, M2) | Caught | 6/7 and 3/7 property tests fail; contract restored |
+| `npm run slither` | Passes Medium/High gate | Original code: 19 results incl. High `reentrancy-eth` |
+| `npm run typecheck`, `npm run build` | Pass | Bundle-size warning from ethers |
+| `npm run demo` | Pass | Five scenarios |
+| Local node + `deploy:local` + `seed:local` + headless Chrome UI run | Pass | Connect, sell-out bid with refund, finalize, claim; light/dark; 390/820/1280 px |
+| GitHub Actions CI | Not run yet | Runs when the branch is pushed |
+| `npm run deploy:sepolia` | Not run | Optional; needs a funded test wallet and RPC key |
