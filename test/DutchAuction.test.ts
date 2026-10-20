@@ -31,7 +31,7 @@ async function deployAuction(options?: {
   const reservePrice = options?.reservePrice ?? ethers.parseEther("0.005");
 
   const Token = await ethers.getContractFactory("LaunchToken");
-  const token = (await Token.deploy("Gavora", "GVRA", saleSupply, issuer.address)) as any;
+  const token = (await Token.deploy("FairLaunch Token", "FAIR", saleSupply, issuer.address)) as any;
   await token.waitForDeployment();
 
   const Auction = await ethers.getContractFactory("DutchAuction");
@@ -85,7 +85,7 @@ async function clearWithCrossingBid(f: Fixture, start: bigint) {
   return f.auction.connect(f.carol).contribute({ value: f.ethers.parseEther("2") });
 }
 
-describe("DutchPoint DutchAuction", function () {
+describe("FairLaunch DutchAuction", function () {
   describe("configuration", function () {
     it("rejects invalid constructor parameters", async function () {
       const f = await deployAuction();

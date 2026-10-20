@@ -11,19 +11,19 @@ async function main() {
   const [issuer, alice, bob, whale] = await ethers.getSigners();
 
   const saleSupply = ethers.parseUnits("1000", 18);
-  const token = await (await ethers.getContractFactory("LaunchToken")).deploy(
-    "Gavora",
-    "GVRA",
+  const token = (await (await ethers.getContractFactory("LaunchToken")).deploy(
+    "FairLaunch Token",
+    "FAIR",
     saleSupply,
     issuer.address
-  );
-  const auction = await (await ethers.getContractFactory("DutchAuction")).deploy(
+  )) as any;
+  const auction = (await (await ethers.getContractFactory("DutchAuction")).deploy(
     await token.getAddress(),
     saleSupply,
     ethers.parseEther("0.02"),
     ethers.parseEther("0.005"),
     issuer.address
-  );
+  )) as any;
   await (await token.transfer(await auction.getAddress(), saleSupply)).wait();
   await (await auction.start()).wait();
   const start = BigInt(await auction.startTime());
@@ -38,7 +38,8 @@ async function main() {
   const balanceBefore = new Map<string, bigint>();
   const track = async (name: string, txPromise: Promise<any>) => {
     const receipt = await (await txPromise).wait();
-    gasSpent.set(name, (gasSpent.get(name) ?? 0n) + receipt.gasUsed * receipt.gasPrice);
+    const gas = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice);
+    gasSpent.set(name, (gasSpent.get(name) ?? 0n) + gas);
   };
 
   for (const p of participants) {
@@ -57,8 +58,8 @@ async function main() {
     }
   }
 
-  console.log(`Final price: ${ethers.formatEther(await auction.finalPrice())} ETH per GVRA`);
-  console.log("Participant | Committed ETH | Net ETH paid | GVRA received | Share of supply");
+  console.log(`Final price: ${ethers.formatEther(await auction.finalPrice())} ETH per FAIR`);
+  console.log("Participant | Committed ETH | Net ETH paid | FAIR received | Share of supply");
   for (const p of participants) {
     const after = await ethers.provider.getBalance(p.signer.address);
     const paid = balanceBefore.get(p.name)! - after - gasSpent.get(p.name)!;

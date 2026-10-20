@@ -35,15 +35,13 @@ type Snapshot = {
   totalCommitted: bigint;
   burnedUnsold: bigint;
   participantCount: bigint;
-  settledParticipantCount: bigint;
+  claimedParticipantCount: bigint;
   commitment: bigint;
-  settlementTokens: bigint;
-  settlementAccepted: bigint;
-  settlementRefund: bigint;
-  settlementFinal: boolean;
+  tokensOwed: bigint;
+  claimed: boolean;
   refundCredit: bigint;
   tokenBalance: bigint;
-  issuerProceedsAvailable: bigint;
+  auctionTokenBalance: bigint;
   issuerProceedsWithdrawn: bigint;
 };
 
@@ -154,11 +152,13 @@ export default function App() {
       totalCommitted,
       burnedUnsold,
       participantCount,
-      settledParticipantCount,
-      settlement,
+      claimedParticipantCount,
+      commitment,
+      tokenEntitlement,
+      claimed,
       refundCredit,
       tokenBalance,
-      issuerProceedsAvailable,
+      auctionTokenBalance,
       issuerProceedsWithdrawn
     ] = await Promise.all([
       token.name(),
@@ -177,11 +177,13 @@ export default function App() {
       auction.totalCommitted(),
       auction.burnedUnsold(),
       auction.participantCount(),
-      auction.settledParticipantCount(),
-      auction.settlementOf(account),
+      auction.claimedParticipantCount(),
+      auction.commitments(account),
+      auction.tokensOwed(account),
+      auction.claimed(account),
       auction.refundCredits(account),
       token.balanceOf(account),
-      auction.issuerProceedsAvailable(),
+      token.balanceOf(localAddresses.auction),
       auction.issuerProceedsWithdrawn()
     ]);
 
@@ -206,15 +208,13 @@ export default function App() {
       totalCommitted,
       burnedUnsold,
       participantCount,
-      settledParticipantCount,
-      commitment: settlement[0],
-      settlementTokens: settlement[1],
-      settlementAccepted: settlement[2],
-      settlementRefund: settlement[3],
-      settlementFinal: settlement[4],
+      claimedParticipantCount,
+      commitment,
+      tokensOwed: tokenEntitlement[0],
+      claimed,
       refundCredit,
       tokenBalance,
-      issuerProceedsAvailable,
+      auctionTokenBalance,
       issuerProceedsWithdrawn
     });
   }, [deployed, provider]);
@@ -251,7 +251,9 @@ export default function App() {
     const elapsed = snapshot.started && displayNow > snapshot.startTime ? displayNow - snapshot.startTime : 0n;
     const displayPrice = snapshot.finalized
       ? snapshot.finalPrice
-      : priceAtElapsed(snapshot.startPrice, snapshot.reservePrice, elapsed);
+      : snapshot.status === 1
+        ? priceAtElapsed(snapshot.startPrice, snapshot.reservePrice, elapsed)
+        : snapshot.currentPrice;
 
     let parsedAmount = 0n;
     let inputError = "";
@@ -261,16 +263,16 @@ export default function App() {
       inputError = "Enter a valid ETH amount.";
     }
 
-    const projectedCommitment = snapshot.commitment + parsedAmount;
-    const projectedTotal = snapshot.totalCommitted + parsedAmount;
-    const requiredAtDisplay = (snapshot.saleSupply * displayPrice + TOKEN_SCALE - 1n) / TOKEN_SCALE;
-    const wouldClear = projectedTotal >= requiredAtDisplay;
+    const capacityAtDisplay = (snapshot.saleSupply * displayPrice) / TOKEN_SCALE;
+    const remainingCapacity =
+      capacityAtDisplay > snapshot.totalCommitted ? capacityAtDisplay - snapshot.totalCommitted : 0n;
+    const acceptedAmount = parsedAmount < remainingCapacity ? parsedAmount : remainingCapacity;
+    const projectedCommitment = snapshot.commitment + acceptedAmount;
+    const wouldClear = parsedAmount >= remainingCapacity && remainingCapacity > 0n;
     const provisionalTokens =
-      parsedAmount === 0n
+      acceptedAmount === 0n
         ? 0n
-        : wouldClear && projectedTotal > 0n
-          ? (projectedCommitment * snapshot.saleSupply) / projectedTotal
-          : (projectedCommitment * TOKEN_SCALE) / displayPrice;
+        : (projectedCommitment * TOKEN_SCALE) / displayPrice;
 
     return {
       displayNow,
@@ -280,7 +282,8 @@ export default function App() {
       parsedAmount,
       inputError,
       provisionalTokens,
-      wouldClear
+      wouldClear,
+      surplusRefund: parsedAmount - acceptedAmount
     };
   }, [amount, snapshot, tick]);
 
@@ -335,15 +338,15 @@ export default function App() {
   const wrongNetwork = snapshot !== null && snapshot.chainId !== expectedChainId;
   const canFinalize = snapshot?.status === 3;
   const canContribute = snapshot?.status === 1 && !wrongNetwork;
-  const canClaim = snapshot?.finalized && snapshot.commitment > 0n && snapshot.settlementFinal;
+  const canClaim = snapshot?.finalized && snapshot.commitment > 0n && !snapshot.claimed;
   const hasRefund = (snapshot?.refundCredit ?? 0n) > 0n;
-  const issuerWithdrawable = snapshot
-    ? snapshot.issuerProceedsAvailable - snapshot.issuerProceedsWithdrawn
+  const issuerWithdrawable = snapshot?.finalized
+    ? snapshot.totalCommitted - snapshot.issuerProceedsWithdrawn
     : 0n;
   const canBurnDust =
     snapshot?.finalized &&
-    snapshot.participantCount === snapshot.settledParticipantCount &&
-    snapshot.participantCount > 0n;
+    snapshot.participantCount === snapshot.claimedParticipantCount &&
+    snapshot.auctionTokenBalance > 0n;
 
   return (
     <main className="app-shell">
@@ -353,7 +356,7 @@ export default function App() {
           <h1>FairLaunch</h1>
           <p className="hero-text">
             A local Ethereum Dutch auction for educational token launches: descending price,
-            uniform settlement, pull refunds, and unsold token burns.
+            uniform settlement, safe surplus refunds, and unsold token burns.
           </p>
         </div>
         <div className="wallet-panel">
@@ -439,9 +442,9 @@ export default function App() {
             <p>
               Contributors commit ETH as a maximum budget. The displayed price descends for 20
               minutes, but every successful participant settles at one final clearing price. A
-              participant who committed early can receive more tokens as the price falls; refunds
-              come from oversubscription or integer rounding, not from paying an old submission
-              price.
+              participant who committed early can receive more tokens as the price falls. A bid
+              that crosses the clearing threshold is accepted only up to the remaining capacity,
+              and its surplus is refunded immediately or credited for withdrawal.
             </p>
             <div className="uniform-visual">
               <span>Early participant</span>
@@ -477,7 +480,7 @@ export default function App() {
             </strong>
             <small>
               Estimate only. Contract settlement uses authoritative on-chain state and integer
-              arithmetic.
+              arithmetic.{derived?.surplusRefund ? ` Estimated surplus refund: ${formatEth(derived.surplusRefund)}.` : ""}
             </small>
           </div>
           <button
@@ -509,7 +512,7 @@ export default function App() {
             </button>
             <button
               disabled={!snapshot || !canBurnDust || pending !== null}
-              onClick={() => runTx("burn", (auction) => auction.burnRemainderAfterAllSettled())}
+              onClick={() => runTx("burn", (auction) => auction.burnRemainderAfterAllClaimed())}
             >
               {pending === "burn" ? "Burning..." : "Burn residual dust"}
             </button>
@@ -533,22 +536,24 @@ export default function App() {
           </div>
           <dl className="receipt-list">
             <div>
-              <dt>Deposited ETH</dt>
+              <dt>Accepted commitment</dt>
               <dd>{snapshot ? formatEth(snapshot.commitment) : "-"}</dd>
             </div>
             <div>
               <dt>Accepted cost</dt>
-              <dd>{snapshot ? formatEth(snapshot.settlementAccepted) : "-"}</dd>
+              <dd>{snapshot ? formatEth(snapshot.commitment) : "-"}</dd>
             </div>
             <div>
               <dt>Refund credit</dt>
-              <dd>{snapshot ? formatEth(snapshot.refundCredit || snapshot.settlementRefund) : "-"}</dd>
+              <dd>{snapshot ? formatEth(snapshot.refundCredit) : "-"}</dd>
             </div>
             <div>
-              <dt>Tokens received</dt>
+              <dt>{snapshot?.claimed ? "Tokens received" : "Token entitlement"}</dt>
               <dd>
                 {snapshot
-                  ? `${formatToken(snapshot.tokenBalance, snapshot.tokenSymbol)} wallet balance`
+                  ? snapshot.claimed
+                    ? `${formatToken(snapshot.tokenBalance, snapshot.tokenSymbol)} wallet balance`
+                    : formatToken(snapshot.tokensOwed, snapshot.tokenSymbol)
                   : "-"}
               </dd>
             </div>
@@ -568,10 +573,10 @@ export default function App() {
               <dd>{snapshot ? formatToken(snapshot.burnedUnsold, snapshot.tokenSymbol) : "-"}</dd>
             </div>
             <div>
-              <dt>Participants settled</dt>
+              <dt>Participants claimed</dt>
               <dd>
                 {snapshot
-                  ? `${snapshot.settledParticipantCount.toString()} / ${snapshot.participantCount.toString()}`
+                  ? `${snapshot.claimedParticipantCount.toString()} / ${snapshot.participantCount.toString()}`
                   : "-"}
               </dd>
             </div>

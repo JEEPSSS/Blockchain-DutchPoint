@@ -6,8 +6,8 @@ async function deployStartedAuction(ethers: any, issuer: any) {
   const saleSupply = ethers.parseUnits("1000", 18);
 
   const token = await (await ethers.getContractFactory("LaunchToken")).deploy(
-    "Gavora",
-    "GVRA",
+    "FairLaunch Token",
+    "FAIR",
     saleSupply,
     issuer.address
   );
@@ -35,7 +35,7 @@ async function main() {
   const fmt = (wei: bigint) => ethers.formatEther(wei);
   const gvra = (units: bigint) => ethers.formatUnits(units, 18);
 
-  console.log("DutchPoint deterministic local demo");
+  console.log("FairLaunch deterministic local demo");
   console.log("Falling prices. One clearing price.");
   console.log("-----------------------------------");
 
@@ -50,14 +50,14 @@ async function main() {
       .map((log: any) => auction.interface.parseLog(log))
       .find((event: any) => event?.name === "SurplusRefunded");
     console.log(`Carol sent 2 ETH; ${fmt(refund.args.amount)} ETH surplus returned in the same transaction`);
-    console.log(`Clearing price locked at t=700s: ${fmt(await auction.clearingPrice())} ETH/GVRA`);
+    console.log(`Clearing price locked at t=700s: ${fmt(await auction.clearingPrice())} ETH/FAIR`);
 
     await at(start + DURATION);
     await (await auction.finalize()).wait();
     for (const [name, signer] of [["Alice", alice], ["Bob", bob], ["Carol", carol]] as const) {
       await (await auction.connect(signer).claimTokens()).wait();
       console.log(
-        `${name}: committed ${fmt(await auction.commitments(signer.address))} ETH -> ${gvra(await token.balanceOf(signer.address))} GVRA`
+        `${name}: committed ${fmt(await auction.commitments(signer.address))} ETH -> ${gvra(await token.balanceOf(signer.address))} FAIR`
       );
     }
     await (await auction.connect(issuer).withdrawIssuerProceeds(issuer.address)).wait();
@@ -66,7 +66,7 @@ async function main() {
     console.log(`Rounding dust burned: ${await auction.burnedUnsold()} token units`);
   }
 
-  console.log("\n2. Undersubscribed sale settles at reserve and burns unsold GVRA");
+  console.log("\n2. Undersubscribed sale settles at reserve and burns unsold FAIR");
   {
     const { auction, token, start } = await deployStartedAuction(ethers, issuer);
     await (await auction.connect(alice).contribute({ value: ethers.parseEther("1") })).wait();
@@ -74,10 +74,10 @@ async function main() {
     await (await auction.finalize()).wait();
     await (await auction.connect(alice).claimTokens()).wait();
 
-    console.log(`Final reserve price: ${fmt(await auction.finalPrice())} ETH/GVRA`);
-    console.log(`Tokens claimed: ${gvra(await token.balanceOf(alice.address))} GVRA`);
-    console.log(`Tokens burned: ${gvra(await auction.burnedUnsold())} GVRA`);
-    console.log(`GVRA total supply now: ${gvra(await token.totalSupply())}`);
+    console.log(`Final reserve price: ${fmt(await auction.finalPrice())} ETH/FAIR`);
+    console.log(`Tokens claimed: ${gvra(await token.balanceOf(alice.address))} FAIR`);
+    console.log(`Tokens burned: ${gvra(await auction.burnedUnsold())} FAIR`);
+    console.log(`FAIR total supply now: ${gvra(await token.totalSupply())}`);
   }
 
   console.log("\n3. Bidder contract that rejects ETH keeps its surplus as a withdrawable credit");
@@ -103,9 +103,9 @@ async function main() {
 
   console.log("\n4a. Reentrancy attack drains a deliberately vulnerable auction");
   {
-    const vulnerable = await (await ethers.getContractFactory("VulnerableAuction")).deploy(
+    const vulnerable = (await (await ethers.getContractFactory("VulnerableAuction")).deploy(
       ethers.parseEther("10")
-    );
+    )) as any;
     await vulnerable.waitForDeployment();
     const selector = vulnerable.interface.getFunction("withdrawRefund")!.selector;
     const attacker = await (await ethers.getContractFactory("ReentrancyAttacker")).deploy(
@@ -126,7 +126,7 @@ async function main() {
     console.log(`Vulnerable auction balance: ${fmt(await ethers.provider.getBalance(await vulnerable.getAddress()))} ETH (Alice's and Bob's bids are gone)`);
   }
 
-  console.log("\n4b. The same attack against DutchPoint's auction is blocked");
+  console.log("\n4b. The same attack against FairLaunch's auction is blocked");
   {
     const { auction, start } = await deployStartedAuction(ethers, issuer);
     const selector = auction.interface.getFunction("withdrawRefundTo")!.selector;

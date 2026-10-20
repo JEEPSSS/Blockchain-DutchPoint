@@ -12,7 +12,7 @@ interface IBurnableERC20 is IERC20 {
 }
 
 /// @title DutchAuction
-/// @notice One-shot uniform-price Dutch auction used by DutchPoint to launch Gavora (GVRA).
+/// @notice One-shot uniform-price Dutch auction used by FairLaunch to launch FAIR.
 /// @dev Bidders commit ETH while the price falls linearly from `startPrice` to `reservePrice`
 ///      over 20 minutes. The auction clears once committed ETH can buy the whole sale supply,
 ///      and every bidder pays that single clearing price.

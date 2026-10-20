@@ -49,8 +49,8 @@ describe("Reentrancy demonstration", function () {
 
     const saleSupply = ethers.parseUnits("1000", 18);
     const token = (await (await ethers.getContractFactory("LaunchToken")).deploy(
-      "Gavora",
-      "GVRA",
+      "FairLaunch Token",
+      "FAIR",
       saleSupply,
       issuer.address
     )) as any;

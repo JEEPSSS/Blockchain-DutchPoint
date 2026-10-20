@@ -19,7 +19,7 @@ contract DutchAuctionFuzzTest is Test {
     uint256 internal start;
 
     function setUp() public {
-        token = new LaunchToken("Gavora", "GVRA", SUPPLY, address(this));
+        token = new LaunchToken("FairLaunch Token", "FAIR", SUPPLY, address(this));
         auction = new DutchAuction(token, SUPPLY, START_PRICE, RESERVE_PRICE, address(this));
         token.transfer(address(auction), SUPPLY);
         auction.start();

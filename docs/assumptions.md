@@ -24,7 +24,7 @@ Initial implementation assumption:
 
 - The economic outcome can lock early when the clearing threshold is reached.
 - Contributions after economic clearing are rejected.
-- Participants cannot claim tokens, withdraw refunds, or let the issuer withdraw proceeds until the scheduled 1,200 second endpoint.
+- Participants cannot claim tokens or let the issuer withdraw proceeds until finalization at the scheduled 1,200 second endpoint. A failed automatic surplus refund may be withdrawn earlier because it is already determined.
 
 Reason:
 
@@ -40,16 +40,16 @@ Question for TA:
 
 > Is it acceptable for the contract to automatically calculate refund credits during settlement while requiring users to pull ETH refunds with a separate transaction?
 
-Initial implementation assumption:
+Initial implementation policy:
 
-- Refunds are calculated automatically and recorded as contract state.
-- ETH is transferred only through a user-triggered `withdrawRefundTo` function.
-- A failed ETH transfer does not erase refund credit.
+- The crossing-bid surplus is calculated automatically and returned after state updates.
+- If the receiver rejects ETH, the same amount is recorded in `refundCredits`.
+- The participant can safely call `withdrawRefundTo` with an alternate recipient.
 
 Reason:
 
-- Push refunds can let one rejecting receiver block settlement.
-- Pull payments fit checks-effects-interactions and make reentrancy tests clearer.
+- The push attempt is isolated to the bidder's own transaction and cannot block global finalization.
+- The fallback pull path uses checks-effects-interactions and `ReentrancyGuard`.
 
 This assumption has not been approved by the TA.
 
@@ -59,12 +59,12 @@ Question for TA:
 
 > When a contribution crosses the clearing threshold, should the excess ETH be rejected immediately, partially accepted, or accepted as budget and refunded later?
 
-Initial implementation assumption:
+Initial implementation policy:
 
-- The full contribution is accepted as a budget commitment.
+- Only the remaining capacity is accepted from the crossing contribution.
 - The final clearing price locks at the current auction price.
-- Tokens are allocated pro-rata by total committed ETH in a cleared sale.
-- Surplus ETH becomes refund credit.
+- Every accepted commitment buys tokens at that same final price.
+- Surplus ETH is returned immediately or credited if the transfer fails.
 
 Reason:
 
@@ -78,14 +78,14 @@ Assumption:
 
 - On-chain arithmetic uses integer token units and wei.
 - Token allocations round down.
-- Accepted ETH cost rounds up so the participant pays for the exact token units received.
+- Accepted ETH is the participant's sale budget; token allocations round down.
 - Clearly unsold inventory is burned at finalization.
-- Any residual token dust caused by per-account flooring is burned only after every recorded participant has settled.
+- Any residual token dust caused by per-account flooring is burned only after every recorded participant has claimed.
 
 Reason:
 
 - Burning all leftover tokens immediately after finalization could burn tokens owed to users who have not claimed.
-- Burning only after all participants settle preserves claim-order independence.
+- Burning only after all participants claim preserves claim-order independence.
 
 ## Scope Boundaries
 
@@ -99,7 +99,7 @@ Assumptions:
 
 ## Known Limitations To Disclose
 
-- Issuer proceeds become withdrawable as participants settle. This avoids unbounded loops and protects refunds, but it means proceeds from a participant who never settles remain in the contract.
+- Issuer proceeds become withdrawable after finalization without waiting for claims. The amount is derived from accepted commitments and excludes `refundLiability`.
 - A contract participant that rejects ETH must call `withdrawRefundTo` with a recipient address able to receive ETH. If that contract has no such method, its refund may remain stuck by its own design.
 - The frontend is a local educational dashboard, not a production launch platform.
 - The auction does not implement allowlists, KYC, anti-sybil controls, upgradeability, or multi-auction management.

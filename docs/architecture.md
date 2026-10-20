@@ -38,29 +38,31 @@ Responsibilities:
 - Reconstruct time-decay clearing during finalization if no transaction occurred at the economic clearing time.
 - Finalize only after the scheduled endpoint.
 - Calculate settlement entitlements without looping over bidders.
-- Use pull-based refunds and tracked issuer proceeds.
-- Burn clearly unsold tokens at finalization and burn residual token dust only after every participant has settled.
+- Partially accept a threshold-crossing bid and attempt its surplus refund after state updates.
+- Preserve a failed automatic refund as a pull credit withdrawable to an alternate recipient.
+- Burn clearly unsold tokens at finalization and burn residual token dust only after every participant has claimed.
 
 Key state groups:
 
 - Commitments: `commitments[address]`, `totalCommitted`, participant registration count.
 - Final auction state: `clearingTime`, `clearingPrice`, `finalized`, `finalPrice`, `cleared`.
-- Participant settlement: `settled[address]`, `refundCredits[address]`, accepted cost and token receipt history.
-- Issuer accounting: `issuerProceedsAvailable`, `issuerProceedsWithdrawn`.
-- Burn accounting: `burnedUnsold`, `totalTokensClaimed`, `settledParticipantCount`.
+- Participant state: `commitments[address]`, `claimed[address]`, `tokensClaimed[address]`, and `refundCredits[address]`.
+- Issuer accounting: `totalCommitted`, `refundLiability`, and `issuerProceedsWithdrawn`.
+- Burn accounting: `burnedUnsold`, `totalTokensClaimed`, and `claimedParticipantCount`.
 
 Security controls:
 
 - OpenZeppelin `ReentrancyGuard` from `@openzeppelin/contracts/utils/ReentrancyGuard.sol`.
 - Checks-effects-interactions on ETH transfers.
-- No raw-balance proceeds withdrawal.
+- Issuer proceeds derive from `totalCommitted`, never the raw ETH balance.
 - No unbounded loops in finalization, refund, settlement, or burning.
 - Custom errors for auditable failure cases.
 
 ### Test-Only Contracts
 
-- `RejectingReceiver.sol`: contributes ETH from a contract whose receive function rejects ETH, proving one participant cannot block settlement and that failed refund transfers preserve credit.
-- `ReentrantRefundAttacker.sol`: attempts to reenter refund withdrawal from its receive function, proving reentrancy protection and effects-before-interactions.
+- `contracts/test/RejectingReceiver.sol`: rejects the automatic crossing-bid refund, proving the credit is preserved and can be redirected.
+- `contracts/test/ReentrancyAttacker.sol`: attacks both a deliberately vulnerable teaching contract and FairLaunch's guarded refund path.
+- `contracts/test/VulnerableAuction.sol`: intentionally unsafe teaching contract used only to demonstrate a real reentrancy drain.
 
 These contracts are intentionally adversarial teaching artifacts, not implementation defects.
 
@@ -122,9 +124,9 @@ Contract tests are the source of truth for auction economics:
 - Partial sale at reserve and unsold burn.
 - Early clearing and settlement delayed until 1,200 seconds.
 - Clearing caused by time passing without a new bid.
-- Crossing bid surplus refund policy.
+- Crossing bid partial acceptance and immediate/fallback refund policy.
 - Multiple contributions by one wallet.
-- Small amounts, rounding, and dust burn after all settle.
+- Small amounts, rounding, and dust burn after all claim.
 - Uniform final price.
 - Claim order independence.
 - Duplicate claims and withdrawals.

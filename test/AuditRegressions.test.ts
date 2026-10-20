@@ -24,8 +24,8 @@ async function deployStarted() {
   const reservePrice = ethers.parseEther("0.005");
 
   const token = (await (await ethers.getContractFactory("LaunchToken")).deploy(
-    "Gavora",
-    "GVRA",
+    "FairLaunch Token",
+    "FAIR",
     saleSupply,
     issuer.address
   )) as any;

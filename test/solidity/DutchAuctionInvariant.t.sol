@@ -21,7 +21,7 @@ contract AuctionHandler is Test {
     uint256 public nonUniformClaims;
 
     constructor() {
-        token = new LaunchToken("Gavora", "GVRA", SUPPLY, address(this));
+        token = new LaunchToken("FairLaunch Token", "FAIR", SUPPLY, address(this));
         auction = new DutchAuction(token, SUPPLY, 0.02 ether, 0.005 ether, address(this));
         token.transfer(address(auction), SUPPLY);
         auction.start();
@@ -111,7 +111,7 @@ contract DutchAuctionInvariantTest is Test {
         );
     }
 
-    /// Every GVRA unit of the sale is held by the auction, claimed, or burned - nothing else.
+    /// Every FAIR unit of the sale is held by the auction, claimed, or burned - nothing else.
     function invariant_TokensAreConserved() public view {
         uint256 supply = handler.SUPPLY();
         assertEq(token.balanceOf(address(auction)) + auction.totalTokensClaimed() + auction.burnedUnsold(), supply);

@@ -30,10 +30,11 @@ npm run demo
 
 Current verified result:
 
-- Contract tests: 18 passing.
+- Contract tests: 47 passing (7 Solidity fuzz/invariant tests and 40 Mocha tests).
 - Frontend typecheck: passing.
 - Production build: passing. Vite reports a chunk-size warning because ethers is bundled.
 - Deterministic demo: passing.
+- Dependency audit: zero known vulnerabilities.
 - Slither: not installed in this environment, so static analysis could not be executed locally.
 
 ## Local Deployment And Frontend
@@ -96,20 +97,21 @@ For a narrated video, follow `docs/demo-script.md`.
 
 - `contracts/LaunchToken.sol`: fixed-supply ERC20 token with burn support.
 - `contracts/DutchAuction.sol`: one-shot auction engine.
-- `contracts/RejectingReceiver.sol`: test-only rejecting refund receiver.
-- `contracts/ReentrantRefundAttacker.sol`: test-only reentrancy attacker.
+- `contracts/test/RejectingReceiver.sol`: test-only rejecting refund receiver.
+- `contracts/test/ReentrancyAttacker.sol`: test-only attacker used against guarded and vulnerable refund paths.
+- `contracts/test/VulnerableAuction.sol`: intentionally vulnerable teaching contract.
 
 ## Important Policy Assumptions
 
 These assumptions are documented for TA review and have not been approved:
 
 - Early economic clearing may lock the auction outcome, while claims and withdrawals remain unavailable until the scheduled 1,200 second endpoint.
-- Refunds are calculated automatically but transferred through safe user-triggered withdrawals.
-- A threshold-crossing contribution is fully accepted as budget, and surplus is credited as refund after settlement.
+- A threshold-crossing contribution is accepted only up to remaining capacity; surplus is returned immediately or credited if the receiver rejects ETH.
+- Credited refunds use safe user-triggered withdrawals to an alternate recipient.
 
 ## Known Limitations
 
-- Issuer proceeds become withdrawable as participants settle. This avoids bidder loops and protects refunds, but proceeds from a participant who never settles remain in the contract.
+- Issuer proceeds become withdrawable after finalization without waiting for participant claims; tracked refund liabilities remain protected.
 - A contract participant that rejects ETH must call `withdrawRefundTo` with a recipient capable of receiving ETH.
 - The frontend is a local educational dashboard, not a production token-sale platform.
 - No allowlist, KYC, factory, upgradeability, testnet deployment, oracle, backend, or cross-chain support is included.

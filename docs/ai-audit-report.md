@@ -65,14 +65,24 @@ Important prompt constraints preserved:
 The architecture proposed and implemented:
 
 - `LaunchToken.sol`: fixed-supply ERC20 with OpenZeppelin burn support.
-- `DutchAuction.sol`: one auction per deployment, immutable sale parameters, 1,200-second price decay, early clearing lock, deadline finalization, pull refunds, and tracked issuer proceeds.
-- `RejectingReceiver.sol`: test-only refund rejection helper.
-- `ReentrantRefundAttacker.sol`: test-only reentrancy helper.
+- `DutchAuction.sol`: one auction per deployment, immutable sale parameters, 1,200-second price decay, early clearing lock, deadline finalization, capped crossing bids, and tracked refunds/proceeds.
+- `contracts/test/RejectingReceiver.sol`: test-only refund rejection helper.
+- `contracts/test/ReentrancyAttacker.sol`: test-only attacker used against guarded and deliberately vulnerable refund paths.
+- `contracts/test/VulnerableAuction.sol`: intentionally unsafe teaching contract, clearly separated from production code.
 - Hardhat TypeScript tests.
 - React/Vite frontend with ethers v6 and MetaMask.
 - Local deployment and deterministic demo scripts.
 
 ## 5. Problems Discovered And Vulnerability Analysis
+
+### Issue: An oversized crossing bid could dilute earlier bidders
+
+- Status: Fixed during the 2026-10-20 audit-branch review.
+- Where found: Regression test `F1: a late oversized bid cannot crowd out earlier bidders`.
+- Likely reason it occurred: Inference: the first design accepted the entire crossing bid and then allocated the fixed supply pro-rata, which changed earlier bidders' allocations even though their budgets were already accepted.
+- Why it matters: A late bidder could dominate the allocation by sending far more ETH than the sale could accept, contrary to the expected ETH-budget behavior.
+- What changed: `contribute()` now accepts only the remaining capacity at the current price. The excess is returned immediately or recorded as `refundCredits` if the receiver rejects ETH. Every accepted commitment buys tokens at the same final price.
+- Evidence the fix works: The F1 regression, crossing-bid tests, Solidity fuzz tests, and demand/supply invariant pass. Before/after outputs are preserved in `docs/evidence/01-regressions-before-fix.txt` through `04-crowd-out-poc-after-fix.txt`.
 
 ### Issue: Naive time-clearing can use capital before it existed
 
@@ -89,7 +99,7 @@ The architecture proposed and implemented:
 - Where found: Specification and settlement design.
 - Likely reason it occurred: Inference: the brief says unsold tokens are burned, but unclaimed entitlements also remain in the auction contract before users claim.
 - Why it matters: Burning the raw auction token balance immediately after finalization would destroy tokens owed to participants.
-- What changed: Finalization burns only globally provable unsold inventory. Residual dust is burnable only after every recorded participant has settled.
+- What changed: Finalization burns only globally provable unsold inventory. Residual dust is burnable only after every recorded participant has claimed.
 - Evidence the fix works: `handles tiny commitments, rounding, and residual dust burning` and `conserves tracked ETH and token accounting across settlement` pass.
 
 ### Issue: Initial duplicate-withdrawal test tried to bid after time clearing
@@ -99,7 +109,7 @@ The architecture proposed and implemented:
 - Likely reason it occurred: The test committed enough ETH early that the auction time-cleared before the later contribution.
 - Why it matters: The test was not exercising duplicate withdrawals; it was accidentally verifying post-clearing contribution rejection.
 - What changed: Adjusted commitments so the second contribution is the threshold-crossing bid.
-- Evidence the fix works: Full test suite now passes with 18 tests.
+- Evidence the fix works: The original suite passed with 18 tests; the expanded suite now passes 47 tests.
 
 ### Issue: Demo script attempted dust burn when no dust existed
 
@@ -107,7 +117,7 @@ The architecture proposed and implemented:
 - Where found: First `npm run demo` run.
 - Likely reason it occurred: The undersubscribed example sold exactly 200 tokens, leaving no residual dust after the participant claimed.
 - Why it matters: The demo failed even though contract behavior was correct.
-- What changed: The script checks the auction token balance before calling `burnRemainderAfterAllSettled`.
+- What changed: The script checks the auction token balance before calling `burnRemainderAfterAllClaimed`.
 - Evidence the fix works: `npm run demo` now completes all four scenarios.
 
 ## 6. Validation Process And Testing Strategy
@@ -125,10 +135,12 @@ npm run demo
 Results:
 
 - Compile: passed with solc `0.8.28`.
-- Contract tests: 18 passing.
+- Contract tests: 47 passing (7 Solidity fuzz/invariant tests and 40 Mocha tests).
 - Typecheck: passed.
 - Production frontend build: passed.
 - Demo: passed.
+- Dependency audit: passed with zero known vulnerabilities after non-breaking transitive lockfile updates.
+- Fresh local deployment and generated-ABI read: passed on chain `31337`.
 - Slither: unavailable locally (`slither not found`).
 
 Test coverage includes:
@@ -150,6 +162,7 @@ Test coverage includes:
 - Rejecting refund receiver.
 - Reentrancy attempt.
 - ETH and token conservation.
+- A real reentrancy drain against the intentionally vulnerable teaching contract and the same attack blocked by `DutchAuction`.
 
 ## 7. Improvements And Refinements
 
@@ -157,9 +170,9 @@ Improvements over a minimal implementation:
 
 - Explicit auction math with examples before coding.
 - `lastCommitmentTimestamp` to prevent retroactive clearing.
-- Pull refunds with alternate recipient support.
-- Issuer proceeds accrue from settled accounts rather than raw ETH balance.
-- Dust burn gated by all participants settling.
+- Automatic crossing-bid surplus refunds with alternate-recipient fallback credits.
+- Issuer proceeds derive from accepted commitments rather than raw ETH balance and do not wait for claims.
+- Dust burn gated by all participants claiming.
 - No bidder loops in settlement, refund withdrawal, or burning.
 - Responsive frontend with wrong-network handling and provisional allocation labels.
 - Deterministic demo script for repeatable evidence.

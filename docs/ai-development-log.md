@@ -87,12 +87,12 @@ Important decisions:
 
 - This is an ETH-budget commitment auction, not a pay-at-submission-price sale.
 - Price is linear over exactly 1,200 seconds and floored at reserve.
-- Clearing condition uses full-precision `ceil(S * P / TOKEN_SCALE)`.
+- Bid capacity uses full-precision `floor(S * P / TOKEN_SCALE)`; time-only clearing uses `ceil(C * TOKEN_SCALE / S)`.
 - Time-decay clearing is reconstructed at finalization if no transaction occurs at the clearing second.
-- Threshold-crossing contributions are accepted fully and surplus is refunded after settlement.
-- Cleared sale token allocation is pro-rata by total committed ETH.
+- Threshold-crossing contributions are accepted only up to remaining capacity; surplus is pushed or credited.
+- Every accepted commitment buys tokens at the one final price.
 - Undersubscribed sale allocation is budget divided by reserve price.
-- Per-account token amounts round down; accepted ETH rounds up.
+- Per-account token amounts round down; accepted ETH is already capped when contributed.
 
 Potential risk identified before coding:
 
@@ -101,7 +101,7 @@ Potential risk identified before coding:
 Planned mitigation:
 
 - Burn only globally provable unsold inventory at finalization.
-- Burn residual dust only after all recorded participants settle.
+- Burn residual dust only after all recorded participants claim.
 
 ## Issue Log Template
 
@@ -129,6 +129,37 @@ Add command outputs here after they are actually run.
 | 2026-09-25 | `npm run build` | Passed | Vite production build passed; chunk-size warning due ethers bundle. |
 | 2026-09-25 | `npm run demo` | Passed | Demonstrated successful sale, undersubscribed burn, rejecting receiver, and blocked reentrancy. |
 | 2026-09-25 | `which slither` | Not available | `slither not found`; static analysis not executed locally. |
+| 2026-10-20 | `npm run check` after audit merge | Passed | 47 tests, TypeScript checks, and Vite production build passed. |
+| 2026-10-20 | Fresh local deploy and generated-ABI read | Passed | Chain 31337; frontend ABI read status, price, commitments, and token entitlement from the deployed auction. |
+| 2026-10-20 | `npm run demo` | Passed | Automatic surplus refund, undersubscribed burn, rejecting receiver recovery, vulnerable drain, and blocked production reentrancy demonstrated. |
+| 2026-10-20 | `npm audit --audit-level=low` | Passed | Non-breaking transitive updates applied; zero known vulnerabilities reported. |
+
+## 2026-10-20 - GitHub Audit Branch Integration
+
+- Fetched `origin/audit/claude-review` and reviewed nine commits.
+- Merged the four correctness-focused commits through `7d4a531`: regression tests, auction fixes, the reentrancy demonstration, and Solidity fuzz/invariant coverage.
+- Did not merge the later DutchPoint/Gavora rebrand because the primary assignment request names the project FairLaunch. This is a project decision, not TA approval.
+- Some preserved `docs/evidence/*.txt` outputs contain the temporary DutchPoint/GVRA labels used during that review. They remain verbatim historical evidence; active code, tests, and documentation use FairLaunch/FAIR.
+- Found six TypeScript errors in the intermediate audit commit and corrected contract typing and bigint gas arithmetic.
+- Found that the original frontend still called removed contract methods after the auction refactor. Regenerated the ABI and updated reads/actions to `tokensOwed`, `claimed`, `claimedParticipantCount`, `burnRemainderAfterAllClaimed`, and tracked proceeds.
+
+### Issue: Oversized clearing bid diluted earlier accepted budgets
+
+- Status: Fixed.
+- Where found: Audit regression `F1` and `scripts/poc-crowd-out.ts`.
+- Likely reason it occurred: Inference: the initial pro-rata model treated the crossing bid's entire `msg.value` as demand even after the fixed supply was economically full.
+- Why it matters: A late whale could crowd out earlier bidders and create large settlement refunds.
+- What changed: Accept only remaining capacity at the current price; return or credit the surplus.
+- Evidence the fix works: Regression, fuzz, invariant, and full lifecycle tests pass; before/after outputs are preserved in `docs/evidence/`.
+
+### Issue: Frontend ABI and state reads became stale after contract refactor
+
+- Status: Fixed.
+- Where found: Post-merge integration review.
+- Likely reason it occurred: Inference: the contract and tests changed in an earlier commit, while the frontend adaptation existed only in later commits that also contained a conflicting rebrand.
+- Why it matters: The app would build but fail at runtime when calling removed methods such as `settlementOf`.
+- What changed: Regenerated `src/generated/DutchAuction.json` and updated frontend reads, claim/burn controls, proceeds calculation, and crossing-bid estimates.
+- Evidence the fix works: Type checking and the production build pass against the regenerated ABI; local runtime verification is recorded with the final merge checks.
 
 ### Issue: Naive time-clearing can use capital before it existed
 
@@ -145,7 +176,7 @@ Add command outputs here after they are actually run.
 - Where found: Specification phase.
 - Likely reason it occurred: Inference: "burn unsold tokens" can be misread as "burn every token still held by the auction at finalization."
 - Why it matters: Before claims, the auction contract still holds tokens owed to participants.
-- What changed: Burn only provably unsold inventory at finalization. Burn residual dust only after all participants have settled.
+- What changed: Burn only provably unsold inventory at finalization. Burn residual dust only after all participants have claimed.
 - Evidence the fix works: `handles tiny commitments, rounding, and residual dust burning` and conservation tests pass.
 
 ### Issue: Initial duplicate-withdrawal test accidentally bid after time clearing
@@ -163,5 +194,5 @@ Add command outputs here after they are actually run.
 - Where found: First demo run.
 - Likely reason it occurred: The undersubscribed example sold an exact token amount, so no post-claim dust existed.
 - Why it matters: Demo failed despite correct contract behavior.
-- What changed: Demo checks auction token balance before calling `burnRemainderAfterAllSettled`.
+- What changed: Demo checks auction token balance before calling `burnRemainderAfterAllClaimed`.
 - Evidence the fix works: `npm run demo` completes.

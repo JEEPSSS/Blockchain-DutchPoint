@@ -8,7 +8,7 @@ Target length: 8-10 minutes.
 - Explain separation of token logic and auction logic.
 - Explain the two documented assumptions:
   - Early clearing can lock outcome, settlement waits for 1,200 seconds.
-  - Refunds are calculated automatically but withdrawn safely by users.
+  - Crossing-bid surplus is refunded automatically; a failed transfer becomes a safe withdrawal credit.
 
 ## 1:00-2:00 - Run Checks
 
@@ -21,7 +21,7 @@ npm run build
 
 Mention:
 
-- 18 contract tests pass.
+- 47 contract tests pass, including Solidity fuzz and invariant tests.
 - Frontend builds.
 - Slither was unavailable locally and is recorded as not run.
 
@@ -50,7 +50,7 @@ Use the deterministic script output or frontend interactions to show:
 - A crossing contribution locks a clearing price before the deadline.
 - Finalization is only available at the 20-minute endpoint.
 - All participants pay the same final price.
-- Surplus ETH is available as refund credit.
+- The crossing bid's surplus is returned immediately.
 
 Command evidence:
 
@@ -61,9 +61,9 @@ npm run demo
 Expected output includes:
 
 ```text
-Successful sale with surplus refunds
-Final price: 0.01125 ETH/token
-Tokens sold: 1000.0 FAIR
+Carol sent 2 ETH; 0.75 ETH surplus returned in the same transaction
+Clearing price locked at t=700s: 0.01125 ETH/FAIR
+Issuer proceeds withdrawn: 11.25 ETH
 ```
 
 ## 4:30-5:45 - Undersubscribed Sale
@@ -78,7 +78,7 @@ Show:
 Expected output includes:
 
 ```text
-Undersubscribed sale with token burn
+Final reserve price: 0.005 ETH/FAIR
 Tokens claimed: 200.0 FAIR
 Tokens burned: 800.0 FAIR
 ```
@@ -94,23 +94,23 @@ Show:
 Expected output includes:
 
 ```text
-Rejected direct refund preserved credit: 0.75 ETH
-Alternate recipient refund credit after withdrawal: 0 wei
+Credited instead of pushed: 0.75 ETH
+Credit after withdrawing to another address: 0 wei
 ```
 
 ## 7:00-8:15 - Reentrancy Attempt
 
 Show:
 
-- `ReentrantRefundAttacker` tries to reenter refund withdrawal.
+- `ReentrancyAttacker` first drains the intentionally vulnerable teaching contract, then tries the same pattern against FairLaunch.
 - `ReentrancyGuard` blocks the nested withdrawal.
 - Outer refund completes once.
 
 Expected output includes:
 
 ```text
-Reentry succeeded: false
-Remaining attacker refund credit: 0 wei
+Re-entry attempts: 1, successful: 0
+Attacker received only its own refund: 0.75 ETH
 ```
 
 ## 8:15-9:30 - Audit And Limitations
@@ -124,6 +124,6 @@ Open:
 Mention:
 
 - No TA approval has been claimed for ambiguous requirements.
-- Issuer proceeds accrue as users settle to avoid unbounded loops.
+- Issuer proceeds become available after finalization from tracked accepted commitments, while refund liabilities remain protected.
 - This is a local educational dApp, not a production token sale.
 
