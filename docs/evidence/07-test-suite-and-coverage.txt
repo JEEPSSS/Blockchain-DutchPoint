@@ -1,0 +1,107 @@
+# Full test suite with coverage
+# Command: npm run coverage
+# Date: 2026-10-20T04:57Z
+
+
+> fairlaunch@0.1.0 coverage
+> mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test --coverage
+
+No contracts to compile
+
+Running Solidity tests
+
+  test/solidity/DutchAuctionFuzz.t.sol:DutchAuctionFuzzTest
+    ✔ testFuzz_TimeClearingPriceIsExact(uint256) (runs: 1000)
+    ✔ testFuzz_SettlementIsUniformFairAndConserving(uint256[6],uint256[6]) (runs: 1000)
+    ✔ testFuzz_PriceIsMonotonicAndBounded(uint256,uint256) (runs: 1000)
+
+  test/solidity/DutchAuctionInvariant.t.sol:DutchAuctionInvariantTest
+    ✔ invariant_TokensAreConserved() (runs: 256)
+    ✔ invariant_EthIsFullyBacked() (runs: 256)
+    ✔ invariant_DemandNeverExceedsSupply() (runs: 256)
+    ✔ invariant_ClaimsUseOneUniformPrice() (runs: 256)
+
+Running Mocha tests
+
+
+  Audit regressions
+    ✔ F1: a late oversized bid cannot crowd out earlier bidders (343ms)
+    ✔ F2: status and price reflect clearing caused by time passing
+    ✔ F3: a cleared auction reports AwaitingFinalization once the window ends
+    ✔ F4: issuer proceeds are withdrawable at finalization without waiting for bidders
+
+  DutchPoint DutchAuction
+    configuration
+      ✔ rejects invalid constructor parameters (44ms)
+      ✔ only starts once, only by the owner, and only when funded
+    price
+      ✔ decays linearly over exactly 1,200 seconds
+      ✔ is monotonic and never falls below reserve
+    bidding
+      ✔ rejects contributions before opening, of zero value, and after closing
+      ✔ accepts plain ETH transfers as contributions
+      ✔ aggregates multiple contributions by one wallet
+      ✔ accepts a crossing bid only up to capacity and refunds the surplus in the same transaction
+      ✔ rejects bids once the auction has cleared by a crossing bid
+      ✔ rejects bids once falling prices alone have cleared the auction
+      ✔ reports remaining capacity while active and zero once cleared
+    status and views
+      ✔ moves through Pending, Active, Cleared, AwaitingFinalization and Finalized
+      ✔ quotes a lower-bound allocation before finalization and the exact one after
+    edge cases
+      ✔ returns neutral values from every view before the auction starts
+      ✔ quotes the live price while active and the final price after finalization
+      ✔ rejects the zero address as a refund or proceeds recipient
+      ✔ keeps proceeds available when the issuer's recipient rejects ETH
+      ✔ refuses to burn remaining tokens before finalization
+      ✔ never dates a time-based clearing before the commitment that funded it
+    finalization
+      ✔ rejects early and repeated finalization
+      ✔ burns the full inventory when nobody bids
+      ✔ settles an undersubscribed sale at reserve and burns unsold tokens
+      ✔ locks a crossing-bid clearing before the deadline but settles only after 1,200 seconds
+      ✔ finds the exact clearing point when falling prices alone clear the auction
+      ✔ rounds a time-based clearing price up so claims never exceed supply
+    claims
+      ✔ fills earlier bidders in full and charges everyone the same final price
+      ✔ keeps claims independent of claim order
+      ✔ rejects claims before finalization, without a commitment, and twice
+      ✔ burns rounding dust only after every participant has claimed
+    refunds
+      ✔ credits the surplus when a bidder rejects ETH, and allows withdrawal to another address once
+      ✔ blocks an attacker that re-enters refund withdrawal
+    issuer proceeds
+      ✔ lets only the owner withdraw, only after finalization, and only once
+      ✔ keeps credited refunds solvent after the issuer withdraws
+    conservation
+      ✔ accounts for every token and every wei across a full lifecycle
+
+  Reentrancy demonstration
+    ✔ drains a naive auction whose refund sends ETH before clearing the credit
+    ✔ pays the same attacker only its own refund from DutchAuction
+
+
+  40 passing (1s)
+
+
+47 passing (7 solidity, 40 mocha)
+
+Saved html report to coverage/html
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                Coverage Report                                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════════════════╗
+║ File Coverage                                                                  ║
+╟───────────────────────────────────────┬────────┬─────────────┬─────────────────╢
+║ File Path                             │ Line % │ Statement % │ Uncovered Lines ║
+╟───────────────────────────────────────┼────────┼─────────────┼─────────────────╢
+║ contracts/test/ReentrancyAttacker.sol │ 100.00 │ 100.00      │ -               ║
+║ contracts/test/RejectingReceiver.sol  │ 85.71  │ 83.33       │ 29              ║
+║ contracts/test/VulnerableAuction.sol  │ 100.00 │ 100.00      │ -               ║
+║ contracts/LaunchToken.sol             │ 75.00  │ 60.00       │ 22              ║
+║ contracts/DutchAuction.sol            │ 100.00 │ 100.00      │ -               ║
+╟───────────────────────────────────────┼────────┼─────────────┼─────────────────╢
+║ Total                                 │ 99.13  │ 98.92       │                 ║
+╚═══════════════════════════════════════╧════════╧═════════════╧═════════════════╝
+
+

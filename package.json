@@ -7,6 +7,9 @@
   "scripts": {
     "compile": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat compile",
     "test": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test",
+    "test:mocha": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test mocha",
+    "test:solidity": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test solidity",
+    "coverage": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test --coverage",
     "node": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat node",
     "deploy:local": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/deploy-local.ts --network localhost",
     "demo": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/demo.ts",
@@ -31,6 +34,7 @@
     "vite": "8.3.1"
   },
   "devDependencies": {
-    "@types/mocha": "10.0.10"
+    "@types/mocha": "10.0.10",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.7"
   }
 }

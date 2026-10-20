@@ -307,6 +307,93 @@ describe("DutchPoint DutchAuction", function () {
     });
   });
 
+  describe("edge cases", function () {
+    it("returns neutral values from every view before the auction starts", async function () {
+      const f = await deployAuction();
+
+      expect(await f.auction.endTime()).to.equal(0n);
+      expect(await f.auction.clearingState()).to.deep.equal([false, 0n, 0n]);
+      expect(await f.auction.currentPrice()).to.equal(f.startPrice);
+      expect(await f.auction.remainingCapacity()).to.equal(0n);
+      expect(await f.auction.tokensOwed(f.alice.address)).to.deep.equal([0n, false]);
+    });
+
+    it("quotes the live price while active and the final price after finalization", async function () {
+      const f = await deployAuction();
+      const start = await startAuction(f);
+
+      await f.networkHelpers.time.increaseTo(Number(start + 400n));
+      expect(await f.auction.currentPrice()).to.equal(f.ethers.parseEther("0.015"));
+
+      await f.networkHelpers.time.increaseTo(Number(start + DURATION));
+      await f.auction.finalize();
+      expect(await f.auction.currentPrice()).to.equal(f.reservePrice);
+    });
+
+    it("rejects the zero address as a refund or proceeds recipient", async function () {
+      const f = await deployAuction();
+      await startAuction(f);
+
+      await expect(
+        f.auction.connect(f.alice).withdrawRefundTo(f.ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(f.auction, "InvalidAddress");
+      await expect(
+        f.auction.connect(f.issuer).withdrawIssuerProceeds(f.ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(f.auction, "InvalidAddress");
+    });
+
+    it("keeps proceeds available when the issuer's recipient rejects ETH", async function () {
+      const f = await deployAuction();
+      const start = await startAuction(f);
+      const RejectingReceiver = await f.ethers.getContractFactory("RejectingReceiver");
+      const rejecting = (await RejectingReceiver.deploy(await f.auction.getAddress())) as any;
+
+      await f.auction.connect(f.alice).contribute({ value: f.ethers.parseEther("1") });
+      await at(f, start + DURATION);
+      await f.auction.finalize();
+
+      await expect(
+        f.auction.connect(f.issuer).withdrawIssuerProceeds(await rejecting.getAddress())
+      ).to.be.revertedWithCustomError(f.auction, "ProceedsTransferFailed");
+      expect(await f.auction.issuerProceedsWithdrawn()).to.equal(0n);
+    });
+
+    it("refuses to burn remaining tokens before finalization", async function () {
+      const f = await deployAuction();
+      await startAuction(f);
+
+      await expect(f.auction.burnRemainderAfterAllClaimed()).to.be.revertedWithCustomError(
+        f.auction,
+        "AuctionNotFinalized"
+      );
+    });
+
+    it("never dates a time-based clearing before the commitment that funded it", async function () {
+      // Wei-scale prices change only every 400 seconds, so the price at which 59 wei buys the
+      // 10-token supply (ceil(5.9) = 6 wei) was already reached at the start of the auction.
+      const f = await deployAuction({
+        saleSupply: 10n * TOKEN_SCALE,
+        startPrice: 6n,
+        reservePrice: 3n
+      });
+      const start = await startAuction(f);
+
+      await at(f, start + 100n);
+      await f.auction.connect(f.alice).contribute({ value: 59n });
+
+      expect(await f.auction.clearingState()).to.deep.equal([true, 6n, start + 100n]);
+      await at(f, start + 101n);
+      await expect(
+        f.auction.connect(f.bob).contribute({ value: 1n })
+      ).to.be.revertedWithCustomError(f.auction, "AuctionAlreadyCleared");
+
+      await at(f, start + DURATION);
+      await f.auction.finalize();
+      expect(await f.auction.clearingTime()).to.equal(start + 100n);
+      expect(await f.auction.totalTokensSold()).to.be.lessThanOrEqual(f.saleSupply);
+    });
+  });
+
   describe("finalization", function () {
     it("rejects early and repeated finalization", async function () {
       const f = await deployAuction();

@@ -57,7 +57,7 @@ describe("Audit regressions", function () {
     const whaleBefore = await f.ethers.provider.getBalance(f.whale.address);
     const tx = await f.auction.connect(f.whale).contribute({ value: f.ethers.parseEther("100") });
     const receipt = await tx.wait();
-    const gas = receipt.gasUsed * receipt.gasPrice;
+    const gas = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice);
     const whaleSpentInBidTx = whaleBefore - (await f.ethers.provider.getBalance(f.whale.address)) - gas;
 
     await f.networkHelpers.time.setNextBlockTimestamp(Number(f.start + DURATION));

@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [hardhatToolboxMochaEthers],
   paths: {
     sources: "./contracts",
-    tests: "./test",
+    tests: {
+      mocha: "./test",
+      solidity: "./test/solidity"
+    },
     cache: "./cache",
     artifacts: "./artifacts"
   },
@@ -46,6 +49,16 @@ export default defineConfig({
   test: {
     mocha: {
       timeout: 60_000
+    },
+    solidity: {
+      fuzz: {
+        runs: 1000
+      },
+      invariant: {
+        runs: 256,
+        depth: 50,
+        failOnRevert: true
+      }
     }
   }
 });
