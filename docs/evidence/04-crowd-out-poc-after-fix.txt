@@ -1,0 +1,9 @@
+# Crowd-out proof of concept after the fix
+# Command: npx hardhat run scripts/poc-crowd-out.ts
+
+
+Final price: 0.01125 ETH per GVRA
+Participant | Committed ETH | Net ETH paid | GVRA received | Share of supply
+Alice       |           6.0 |       6.0000 |        533.33 | 53.33%
+Bob         |           4.0 |       4.0000 |        355.56 | 35.55%
+Whale       |         100.0 |       1.2500 |        111.11 | 11.11%

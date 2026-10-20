@@ -1,0 +1,9 @@
+# Crowd-out proof of concept against the ORIGINAL AI-generated contract (commit 0a75a78)
+# Command: npx hardhat run scripts/poc-crowd-out.ts
+
+
+Final price: 0.01125 ETH per GVRA
+Participant | Committed ETH | Net ETH paid | GVRA received | Share of supply
+Alice       |           6.0 |       0.6136 |         54.55 | 5.45%
+Bob         |           4.0 |       0.4091 |         36.36 | 3.63%
+Whale       |         100.0 |      10.2273 |        909.09 | 90.90%
