@@ -5,12 +5,7 @@ const DURATION = 1200n;
 async function deployStartedAuction(ethers: any, issuer: any) {
   const saleSupply = ethers.parseUnits("1000", 18);
 
-  const token = await (await ethers.getContractFactory("LaunchToken")).deploy(
-    "Gavora",
-    "GVRA",
-    saleSupply,
-    issuer.address
-  );
+  const token = await (await ethers.getContractFactory("GavoraToken")).deploy(saleSupply, issuer.address);
   await token.waitForDeployment();
 
   const auction = await (await ethers.getContractFactory("DutchAuction")).deploy(
@@ -103,9 +98,9 @@ async function main() {
 
   console.log("\n4a. Reentrancy attack drains a deliberately vulnerable auction");
   {
-    const vulnerable = await (await ethers.getContractFactory("VulnerableAuction")).deploy(
+    const vulnerable = (await (await ethers.getContractFactory("VulnerableAuction")).deploy(
       ethers.parseEther("10")
-    );
+    )) as any;
     await vulnerable.waitForDeployment();
     const selector = vulnerable.interface.getFunction("withdrawRefund")!.selector;
     const attacker = await (await ethers.getContractFactory("ReentrancyAttacker")).deploy(

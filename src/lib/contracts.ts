@@ -1,5 +1,5 @@
 import auctionArtifact from "../generated/DutchAuction.json";
-import tokenArtifact from "../generated/LaunchToken.json";
+import tokenArtifact from "../generated/GavoraToken.json";
 import addresses from "../generated/addresses.local.json";
 
 export const auctionAbi = auctionArtifact.abi;

@@ -48,12 +48,7 @@ describe("Reentrancy demonstration", function () {
     const [issuer, alice, bob] = await ethers.getSigners();
 
     const saleSupply = ethers.parseUnits("1000", 18);
-    const token = (await (await ethers.getContractFactory("LaunchToken")).deploy(
-      "Gavora",
-      "GVRA",
-      saleSupply,
-      issuer.address
-    )) as any;
+    const token = (await (await ethers.getContractFactory("GavoraToken")).deploy(saleSupply, issuer.address)) as any;
     const auction = (await (await ethers.getContractFactory("DutchAuction")).deploy(
       await token.getAddress(),
       saleSupply,

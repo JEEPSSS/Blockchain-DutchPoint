@@ -350,7 +350,7 @@ export default function App() {
       <section className="hero-band">
         <div className="hero-copy">
           <p className="eyebrow">SC4053 Option 2</p>
-          <h1>FairLaunch</h1>
+          <h1>DutchPoint</h1>
           <p className="hero-text">
             A local Ethereum Dutch auction for educational token launches: descending price,
             uniform settlement, pull refunds, and unsold token burns.
@@ -412,9 +412,9 @@ export default function App() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Auction</p>
-              <h2>{snapshot?.tokenName ?? "FairLaunch Token"}</h2>
+              <h2>{snapshot?.tokenName ?? "Gavora"}</h2>
             </div>
-            <span className="status-pill">{snapshot?.tokenSymbol ?? "FAIR"}</span>
+            <span className="status-pill">{snapshot?.tokenSymbol ?? "GVRA"}</span>
           </div>
 
           <PriceChart snapshot={snapshot} elapsed={derived?.elapsed ?? 0n} />

@@ -11,19 +11,14 @@ async function main() {
   const [issuer, alice, bob, whale] = await ethers.getSigners();
 
   const saleSupply = ethers.parseUnits("1000", 18);
-  const token = await (await ethers.getContractFactory("LaunchToken")).deploy(
-    "Gavora",
-    "GVRA",
-    saleSupply,
-    issuer.address
-  );
-  const auction = await (await ethers.getContractFactory("DutchAuction")).deploy(
+  const token = (await (await ethers.getContractFactory("GavoraToken")).deploy(saleSupply, issuer.address)) as any;
+  const auction = (await (await ethers.getContractFactory("DutchAuction")).deploy(
     await token.getAddress(),
     saleSupply,
     ethers.parseEther("0.02"),
     ethers.parseEther("0.005"),
     issuer.address
-  );
+  )) as any;
   await (await token.transfer(await auction.getAddress(), saleSupply)).wait();
   await (await auction.start()).wait();
   const start = BigInt(await auction.startTime());
@@ -38,7 +33,8 @@ async function main() {
   const balanceBefore = new Map<string, bigint>();
   const track = async (name: string, txPromise: Promise<any>) => {
     const receipt = await (await txPromise).wait();
-    gasSpent.set(name, (gasSpent.get(name) ?? 0n) + receipt.gasUsed * receipt.gasPrice);
+    const gas = BigInt(receipt.gasUsed) * BigInt(receipt.gasPrice);
+    gasSpent.set(name, (gasSpent.get(name) ?? 0n) + gas);
   };
 
   for (const p of participants) {

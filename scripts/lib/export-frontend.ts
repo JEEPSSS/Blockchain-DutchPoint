@@ -21,7 +21,7 @@ export async function exportFrontendArtifacts(addresses?: DeploymentAddresses) {
   );
   const tokenArtifact = JSON.parse(
     await readFile(
-      path.join(process.cwd(), "artifacts", "contracts", "LaunchToken.sol", "LaunchToken.json"),
+      path.join(process.cwd(), "artifacts", "contracts", "GavoraToken.sol", "GavoraToken.json"),
       "utf8"
     )
   );
@@ -31,7 +31,7 @@ export async function exportFrontendArtifacts(addresses?: DeploymentAddresses) {
     `${JSON.stringify({ abi: auctionArtifact.abi }, null, 2)}\n`
   );
   await writeFile(
-    path.join(generatedDir, "LaunchToken.json"),
+    path.join(generatedDir, "GavoraToken.json"),
     `${JSON.stringify({ abi: tokenArtifact.abi }, null, 2)}\n`
   );
 

@@ -1,9 +1,9 @@
 {
-  "name": "fairlaunch",
+  "name": "dutchpoint",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "SC4053 educational Dutch auction token launch dApp",
+  "description": "DutchPoint: A Decentralized Dutch Auction Platform - launches the Gavora (GVRA) token",
   "scripts": {
     "compile": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat compile",
     "test": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test",

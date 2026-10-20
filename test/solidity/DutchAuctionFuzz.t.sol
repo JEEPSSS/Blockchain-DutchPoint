@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {DutchAuction} from "../../contracts/DutchAuction.sol";
-import {LaunchToken} from "../../contracts/LaunchToken.sol";
+import {GavoraToken} from "../../contracts/GavoraToken.sol";
 
 /// @notice Property-based tests: each test runs against hundreds of random inputs.
 contract DutchAuctionFuzzTest is Test {
@@ -14,12 +14,12 @@ contract DutchAuctionFuzzTest is Test {
     uint256 internal constant DURATION = 1_200;
     uint256 internal constant BIDDERS = 6;
 
-    LaunchToken internal token;
+    GavoraToken internal token;
     DutchAuction internal auction;
     uint256 internal start;
 
     function setUp() public {
-        token = new LaunchToken("Gavora", "GVRA", SUPPLY, address(this));
+        token = new GavoraToken(SUPPLY, address(this));
         auction = new DutchAuction(token, SUPPLY, START_PRICE, RESERVE_PRICE, address(this));
         token.transfer(address(auction), SUPPLY);
         auction.start();

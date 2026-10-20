@@ -10,8 +10,8 @@ async function main() {
   const startPrice = ethers.parseEther("0.02");
   const reservePrice = ethers.parseEther("0.005");
 
-  const Token = await ethers.getContractFactory("LaunchToken");
-  const token = await Token.deploy("FairLaunch Token", "FAIR", saleSupply, issuer.address);
+  const Token = await ethers.getContractFactory("GavoraToken");
+  const token = await Token.deploy(saleSupply, issuer.address);
   await token.waitForDeployment();
 
   const Auction = await ethers.getContractFactory("DutchAuction");
@@ -37,7 +37,7 @@ async function main() {
     startedAt
   });
 
-  console.log("FairLaunch local deployment complete");
+  console.log("DutchPoint local deployment complete");
   console.log(`Issuer:  ${issuer.address}`);
   console.log(`Token:   ${await token.getAddress()}`);
   console.log(`Auction: ${await auction.getAddress()}`);

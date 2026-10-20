@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {DutchAuction} from "../../contracts/DutchAuction.sol";
-import {LaunchToken} from "../../contracts/LaunchToken.sol";
+import {GavoraToken} from "../../contracts/GavoraToken.sol";
 import {RejectingReceiver, IAuctionForRejectingReceiver} from "../../contracts/test/RejectingReceiver.sol";
 
 /// @notice Drives the auction through random sequences of bids, time jumps, finalization,
@@ -12,7 +12,7 @@ import {RejectingReceiver, IAuctionForRejectingReceiver} from "../../contracts/t
 contract AuctionHandler is Test {
     uint256 public constant SUPPLY = 1_000e18;
 
-    LaunchToken public token;
+    GavoraToken public token;
     DutchAuction public auction;
     RejectingReceiver public rejecter;
     address[] internal actors;
@@ -21,7 +21,7 @@ contract AuctionHandler is Test {
     uint256 public nonUniformClaims;
 
     constructor() {
-        token = new LaunchToken("Gavora", "GVRA", SUPPLY, address(this));
+        token = new GavoraToken(SUPPLY, address(this));
         auction = new DutchAuction(token, SUPPLY, 0.02 ether, 0.005 ether, address(this));
         token.transfer(address(auction), SUPPLY);
         auction.start();
@@ -94,7 +94,7 @@ contract AuctionHandler is Test {
 contract DutchAuctionInvariantTest is Test {
     AuctionHandler internal handler;
     DutchAuction internal auction;
-    LaunchToken internal token;
+    GavoraToken internal token;
 
     function setUp() public {
         handler = new AuctionHandler();

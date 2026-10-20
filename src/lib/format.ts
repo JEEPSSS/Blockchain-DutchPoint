@@ -13,7 +13,7 @@ export function formatEth(value: bigint, places = 4): string {
   return `${trimDecimal(formatEther(value), places)} ETH`;
 }
 
-export function formatToken(value: bigint, symbol = "FAIR", places = 4): string {
+export function formatToken(value: bigint, symbol = "GVRA", places = 4): string {
   return `${trimDecimal(formatUnits(value, 18), places)} ${symbol}`;
 }
 

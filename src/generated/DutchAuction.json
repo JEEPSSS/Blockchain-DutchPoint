@@ -24,7 +24,7 @@
         },
         {
           "internalType": "address",
-          "name": "issuer_",
+          "name": "initialOwner",
           "type": "address"
         }
       ],
@@ -33,7 +33,7 @@
     },
     {
       "inputs": [],
-      "name": "AlreadySettled",
+      "name": "AlreadyClaimed",
       "type": "error"
     },
     {
@@ -65,6 +65,11 @@
         }
       ],
       "name": "AuctionNotFinalizable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "AuctionNotFinalized",
       "type": "error"
     },
     {
@@ -127,7 +132,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "settledCount",
+          "name": "claimedCount",
           "type": "uint256"
         },
         {
@@ -136,7 +141,7 @@
           "type": "uint256"
         }
       ],
-      "name": "OutstandingSettlements",
+      "name": "OutstandingClaims",
       "type": "error"
     },
     {
@@ -191,37 +196,6 @@
       "inputs": [],
       "name": "ZeroContribution",
       "type": "error"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokens",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "acceptedEth",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "refund",
-          "type": "uint256"
-        }
-      ],
-      "name": "AccountSettled",
-      "type": "event"
     },
     {
       "anonymous": false,
@@ -310,6 +284,18 @@
         {
           "indexed": false,
           "internalType": "uint256",
+          "name": "accepted",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
           "name": "totalCommitted",
           "type": "uint256"
         }
@@ -365,6 +351,25 @@
           "type": "address"
         },
         {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "RefundCredited",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
           "indexed": true,
           "internalType": "address",
           "name": "recipient",
@@ -384,6 +389,25 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "SurplusRefunded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
           "internalType": "uint256",
           "name": "amount",
@@ -391,6 +415,25 @@
         }
       ],
       "name": "TokensBurned",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "TokensClaimed",
       "type": "event"
     },
     {
@@ -420,27 +463,8 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "acceptedEthByAccount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [],
-      "name": "burnRemainderAfterAllSettled",
+      "name": "burnRemainderAfterAllClaimed",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -466,6 +490,38 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "claimed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "done",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claimedParticipantCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "cleared",
       "outputs": [
@@ -485,6 +541,29 @@
         {
           "internalType": "uint256",
           "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "clearingState",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isCleared",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "time",
           "type": "uint256"
         }
       ],
@@ -591,32 +670,6 @@
     },
     {
       "inputs": [],
-      "name": "issuer",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "issuerProceedsAvailable",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "issuerProceedsWithdrawn",
       "outputs": [
         {
@@ -631,6 +684,25 @@
     {
       "inputs": [],
       "name": "lastCommitmentTimestamp",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "maxCommitmentAt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -662,25 +734,6 @@
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "participantRegistered",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "registered",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -739,7 +792,7 @@
     },
     {
       "inputs": [],
-      "name": "refundsWithdrawn",
+      "name": "remainingCapacity",
       "outputs": [
         {
           "internalType": "uint256",
@@ -755,25 +808,6 @@
       "name": "renounceOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
-        }
-      ],
-      "name": "requiredEthAtPrice",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -797,77 +831,6 @@
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "settled",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "done",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "settledParticipantCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "settlementOf",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "commitment",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokens",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "acceptedEth",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "refund",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isFinal",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -953,12 +916,36 @@
           "type": "address"
         }
       ],
-      "name": "tokensClaimedByAccount",
+      "name": "tokensClaimed",
       "outputs": [
         {
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "tokensOwed",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokens",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isFinal",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",

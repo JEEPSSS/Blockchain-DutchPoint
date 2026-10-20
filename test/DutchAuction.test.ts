@@ -30,8 +30,8 @@ async function deployAuction(options?: {
   const startPrice = options?.startPrice ?? ethers.parseEther("0.02");
   const reservePrice = options?.reservePrice ?? ethers.parseEther("0.005");
 
-  const Token = await ethers.getContractFactory("LaunchToken");
-  const token = (await Token.deploy("Gavora", "GVRA", saleSupply, issuer.address)) as any;
+  const Token = await ethers.getContractFactory("GavoraToken");
+  const token = (await Token.deploy(saleSupply, issuer.address)) as any;
   await token.waitForDeployment();
 
   const Auction = await ethers.getContractFactory("DutchAuction");
