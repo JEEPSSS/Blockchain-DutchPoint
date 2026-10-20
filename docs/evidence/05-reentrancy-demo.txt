@@ -1,0 +1,32 @@
+# Reentrancy demonstration (bonus requirement)
+# Command: npm run test -- test/Reentrancy.test.ts && npm run demo
+# Date: 2026-10-20T04:53Z
+
+
+> fairlaunch@0.1.0 test
+> mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test test/Reentrancy.test.ts
+
+No contracts to compile
+Running Mocha tests
+
+
+  Reentrancy demonstration
+    ✔ drains a naive auction whose refund sends ETH before clearing the credit (275ms)
+    ✔ pays the same attacker only its own refund from DutchAuction
+
+
+  2 passing (302ms)
+
+
+2 passing (2 mocha)
+
+4a. Reentrancy attack drains a deliberately vulnerable auction
+Attacker's legitimate refund: 1.0 ETH
+Re-entry attempts: 10, successful: 10
+Attacker walked away with: 11.0 ETH
+Vulnerable auction balance: 0.0 ETH (Alice's and Bob's bids are gone)
+
+4b. The same attack against DutchPoint's auction is blocked
+Re-entry attempts: 1, successful: 0
+Attacker received only its own refund: 0.75 ETH
+Auction still holds every bidder's ETH: 11.25 ETH

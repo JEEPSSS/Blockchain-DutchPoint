@@ -101,7 +101,32 @@ async function main() {
     console.log(`Credit after withdrawing to another address: ${await auction.refundCredits(receiverAddress)} wei`);
   }
 
-  console.log("\n4. Refund reentrancy attempt is blocked");
+  console.log("\n4a. Reentrancy attack drains a deliberately vulnerable auction");
+  {
+    const vulnerable = await (await ethers.getContractFactory("VulnerableAuction")).deploy(
+      ethers.parseEther("10")
+    );
+    await vulnerable.waitForDeployment();
+    const selector = vulnerable.interface.getFunction("withdrawRefund")!.selector;
+    const attacker = await (await ethers.getContractFactory("ReentrancyAttacker")).deploy(
+      await vulnerable.getAddress(),
+      selector,
+      false
+    );
+    await attacker.waitForDeployment();
+
+    await (await vulnerable.connect(alice).contribute({ value: ethers.parseEther("6") })).wait();
+    await (await vulnerable.connect(bob).contribute({ value: ethers.parseEther("4") })).wait();
+    await (await attacker.contribute({ value: ethers.parseEther("1") })).wait();
+    console.log(`Attacker's legitimate refund: ${fmt(await vulnerable.refundCredits(await attacker.getAddress()))} ETH`);
+    await (await attacker.attack()).wait();
+
+    console.log(`Re-entry attempts: ${await attacker.reentryAttempts()}, successful: ${await attacker.reentrySuccesses()}`);
+    console.log(`Attacker walked away with: ${fmt(await ethers.provider.getBalance(await attacker.getAddress()))} ETH`);
+    console.log(`Vulnerable auction balance: ${fmt(await ethers.provider.getBalance(await vulnerable.getAddress()))} ETH (Alice's and Bob's bids are gone)`);
+  }
+
+  console.log("\n4b. The same attack against DutchPoint's auction is blocked");
   {
     const { auction, start } = await deployStartedAuction(ethers, issuer);
     const selector = auction.interface.getFunction("withdrawRefundTo")!.selector;
