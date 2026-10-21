@@ -81,7 +81,7 @@ hook keeps retrying.
 
 ## Hosting (GitHub Pages)
 
-`.github/workflows/pages.yml` publishes the frontend to <https://jeepsss.github.io/Blockchain-DutchPoint/>
+`.github/workflows/pages.yml` publishes the frontend to <https://jacksonseowjx.github.io/Blockchain-DutchPoint/>
 on every push to `main`. The `build` job runs `actions/configure-pages`, `npm ci` and `npm run build`, then
 uploads `frontend/dist` with `actions/upload-pages-artifact`. The `deploy` job publishes it with
 `actions/deploy-pages` to the `github-pages` environment. Only the Pages build differs from a local build:

@@ -1,6 +1,6 @@
 import { LOCAL_CHAIN_ID, chainName } from "../lib/contracts";
 
-const README_URL = "https://github.com/JEEPSSS/Blockchain-DutchPoint#quick-start-local";
+const README_URL = "https://github.com/JacksonSeowJX/Blockchain-DutchPoint#quick-start-local";
 
 type Props = {
   /** The chain the app is reading from, which has no DutchPoint deployment. */

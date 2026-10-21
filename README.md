@@ -87,15 +87,16 @@ deploys without starting, so the issuer can start the 20-minute window from the 
 
 ## Live site (GitHub Pages)
 
-**<https://jeepsss.github.io/Blockchain-DutchPoint/>**
+**<https://jacksonseowjx.github.io/Blockchain-DutchPoint/>**
 
 `.github/workflows/pages.yml` builds the frontend and publishes it to GitHub Pages on every push to `main`
 (or by hand from the Actions tab). The hosted build is served from the `/Blockchain-DutchPoint/` sub-path,
 defaults to Sepolia, and reads chain data through the `VITE_READ_RPC_URL` repository variable, or the keyless
 PublicNode Sepolia RPC if the variable is not set.
 
-- **One-time setup by the repository owner:** *Settings → Pages → Build and deployment → Source: GitHub
-  Actions*. Until then the Pages workflow fails at its `configure-pages` step; CI is unaffected.
+- **Repository setting (already done):** *Settings → Pages → Build and deployment → Source: GitHub
+  Actions*. A fork or a copy of this repository needs the same one-time setting, or the Pages workflow
+  fails at its `configure-pages` step; CI is unaffected.
 - **Until there is a Sepolia deployment**, the site explains that DutchPoint isn't deployed on Sepolia yet
   and links back to the [local quick start](#quick-start-local). It becomes interactive once you run
   `npm run deploy:sepolia`, commit the updated `frontend/src/generated/deployments.json` and push to `main`.

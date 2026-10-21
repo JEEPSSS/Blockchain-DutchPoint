@@ -1,6 +1,6 @@
 name: Pages
 
-# Publishes the frontend to https://jeepsss.github.io/Blockchain-DutchPoint/.
+# Publishes the frontend to https://jacksonseowjx.github.io/Blockchain-DutchPoint/.
 # One-time setup by a repository admin: Settings → Pages → Build and deployment → Source: GitHub Actions.
 on:
   push:
