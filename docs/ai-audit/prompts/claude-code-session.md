@@ -203,3 +203,7 @@ and zero broken documentation links. Finally, it listed the remaining work and t
   evidence 09).
 - Saved the reminder about the MetaMask run-through to memory.
 - Wrote this log, with the edited-wording note above.
+- When the subagent reported back, reviewed its diff, checked the action versions it chose against
+  GitHub's release API, cherry-picked its three commits onto `main` (`4d88495`, `388399e`, `9d828ae`)
+  and re-ran the full check. It recorded the three frontend bugs the subagent had found in the
+  earlier Claude Code frontend.

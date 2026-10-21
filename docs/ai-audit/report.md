@@ -89,6 +89,7 @@ trace back to them:
 | ChatGPT | Planning: naming, auction flow, contract and function outline, security checklist, test plan ([`prompts/chatgpt-plan.txt`](prompts/chatgpt-plan.txt)) |
 | Codex desktop agent | First implementation "FairLaunch": contracts, Hardhat tests, React app, docs (commit `0a75a78`); its log is [`development-log.md`](development-log.md) |
 | Claude Code (Claude Opus 5.5, VS Code extension) | Cross-model review of the plan and code, regression tests, contract fixes, fuzz/invariant tests, Slither triage, CI, deploy tooling, frontend rebuild, this report ([`prompts/claude-code-session.md`](prompts/claude-code-session.md)) |
+| Claude Code subagent (general-purpose, in its own git worktree) | GitHub Pages hosting and the frontend's "not deployed" and offline states, built from a written brief. The main session reviewed its diff, re-checked its claims and merged it (`4d88495`, `388399e`, `9d828ae`) |
 
 ### Toolchain
 
@@ -108,6 +109,11 @@ The working rule was **"the AI proposes, tests decide"**:
    that the properties can catch planted bugs (mutation check).
 5. Run static analysis on the original and the fixed code, and triage every result.
 6. Exercise the real UI end to end, and fix what the screenshots reveal.
+7. Delegate self-contained work to a subagent with a written brief. The brief covered requirements,
+   verification steps, ports to avoid and "commit but never push". The subagent worked in an isolated git
+   worktree, so it could not disturb the main checkout. Its output was treated like any other AI output:
+   the main session read the diff, checked the GitHub Actions versions it chose against GitHub's release
+   API, and re-ran the full check on the merged result before pushing.
 
 Each step is a separate commit, so the history is itself part of the evidence.
 
@@ -391,6 +397,9 @@ The reviewing AI also made mistakes. They were caught by the same process:
 | "Cleared at…" chart label drawn on top of the price line | Screenshot review |
 | Bid panel said "Claims open once the auction is finalized" *after* finalization | Screenshot review of the finalized state |
 | End-to-end driver searched case-sensitively for text that CSS renders in upper case | First driver run timed out; page text dumped and inspected |
+| In a build whose default chain has no deployment (the Pages build before any Sepolia deployment), the wrong-network prompt still offered that chain: a wallet already on Sepolia was told "Switch to Sepolia" | The Pages subagent's mock-wallet runs; fixed in `4d88495` |
+| Bid history fetched every block in one `eth_getLogs` call. The public Sepolia RPC rejects ranges over 50,000 blocks (about a week), so hosted history would have broken a week after deployment | The subagent tested the public RPC directly; fixed in `388399e` with 10,000-block chunks |
+| The page made the browser request `/favicon.ico` from the domain root, the app's only root path, which fails under the Pages sub-path | Headless Chrome console check of the Pages build; fixed in `4d88495` with an inline icon |
 
 ## 6. Validation Process & Testing Strategy
 
@@ -453,6 +462,8 @@ The reviewing AI also made mistakes. They were caught by the same process:
 - Owner-only issuer panel and readable error messages.
 - Network switching that offers to add the local chain; read-only view before connecting.
 - Local time-travel tools for the demo; dark mode and a mobile layout.
+- GitHub Pages hosting (`.github/workflows/pages.yml`) that targets Sepolia, with a friendly "not deployed
+  yet" card and an offline warning in place of raw RPC errors.
 
 **Documentation**
 - This report, the evidence folder, prompt logs, an updated spec, assumptions and checklist, and a

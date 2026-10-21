@@ -241,3 +241,26 @@ Paths quoted in evidence files and in earlier entries of this log are left as th
 | `npm run node` + `deploy:local` + `seed:local` + `npm run dev` | Pass; ABIs and addresses written to and read from `frontend/src/generated/` |
 | Root `.env` reaches the frontend (`envDir: ".."`) | Pass |
 | Relative Markdown links in all tracked docs | 0 broken |
+
+## 2026-10-21 - Gas evidence, prompt log and GitHub Pages
+
+Tool: Claude Code, plus one Claude Code subagent for the Pages work.
+
+| Commit | Change |
+| --- | --- |
+| `da81b1e` | `test/Gas.test.ts`: five calls cost exactly the same after 1, 10, 50 and 100 earlier bidders. Mutation M3 (a planted per-bidder loop) fails it. `npm run gas`; evidence 09 |
+| `16232b9` | Claude Code prompt log completed for both days, with the wording edited for grammar and tone and labelled as such |
+| `4d88495` | Subagent: "not deployed yet" card, offline warning, and a fix for the wrong-network prompt offering a chain with no deployment; inline favicon |
+| `388399e` | Subagent: bid history read in 10,000-block chunks (PublicNode caps `eth_getLogs` at 50,000 blocks) |
+| `9d828ae` | Subagent: `.github/workflows/pages.yml` publishes the frontend to GitHub Pages, targeting Sepolia |
+
+Subagent review by the main session before merging (cherry-picked onto `main`):
+
+| Check | Result |
+| --- | --- |
+| Read the full diff (workflow, component, hook, error helper, docs) | Accepted; no contract or test changes |
+| Action versions against GitHub's release API (`checkout` v7.0.1, `setup-node` v7.1.0, `configure-pages` v6.0.0, `upload-pages-artifact` v5.0.0, `deploy-pages` v5.0.1) | All exist as the subagent reported |
+| `npm run check` on the merged `main` | 53 passing; typecheck and build pass |
+| Pages-style build (`--base /Blockchain-DutchPoint/`, Sepolia default) and the normal build | Assets under the sub-path for Pages, and under `/` for the normal build |
+| Running local dev server after the merge | Still serves the local auction |
+| GitHub Pages enabled on the repository | **No** (API returns 404); the repo owner must enable it once |
