@@ -292,7 +292,7 @@ Generated and gitignored: `artifacts/`, `cache/`, `coverage/`, `frontend/dist/`,
 | Document | Contents |
 | --- | --- |
 | [`docs/ai-audit/report.md`](docs/ai-audit/report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence, and an appendix linking the design to the lectures) |
-| [`docs/ai-audit/evidence/`](docs/ai-audit/evidence/) | Evidence 01-09: before/after regression runs, crowd-out PoC, reentrancy demo, mutation check, test suite and coverage, Slither, gas scaling |
+| [`docs/ai-audit/evidence/`](docs/ai-audit/evidence/) | Evidence 01-10: before/after regression runs, crowd-out PoC, reentrancy demo, mutation check, test suite and coverage, Slither, gas scaling, dependency audit |
 | [`docs/ai-audit/prompts/`](docs/ai-audit/prompts/README.md) | Prompt logs for ChatGPT, Codex and Claude Code |
 | [`docs/ai-audit/development-log.md`](docs/ai-audit/development-log.md) | Chronological AI development log |
 | [`docs/design/spec.md`](docs/design/spec.md) | Requirements and auction mathematics |

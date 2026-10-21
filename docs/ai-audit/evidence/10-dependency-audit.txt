@@ -1,0 +1,50 @@
+Evidence 10 - Dependency audit (npm audit). Recorded 2026-10-21 on main after 64b0b89.
+
+== 1. Before: npm audit on 64b0b89
+10 vulnerabilities (2 high, 0 moderate, 8 low). package.json listed 81 packages as production and 2 as dev,
+so `npm audit --omit=dev` reported the same 10 findings (2 high, 8 low): build tools were declared as runtime dependencies.
+
+elliptic * [low]
+  - Elliptic Uses a Cryptographic Primitive with a Risky Implementation (GHSA-848j-6mx2-7j84, low)
+
+source-map-js 1.0.0 - 1.2.1 [high]
+  - source-map-js allows event-loop denial of service through indexed source-map section offsets (GHSA-68fv-2mgg-jv7q, high)
+
+vite 8.3.0 - 8.3.2 [high]
+  - launch-editor: escapeCmdArgs() omits % escaping on Windows (GHSA-698v-4r3x-3vcv, moderate)
+  - launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors (GHSA-r825-w8mm-5pxw, moderate)
+  - launch-editor: `fs.existsSync()` existence check can be bypassed on Windows (GHSA-587h-7wmj-h5pm, high)
+  - plus 7 low findings inherited from elliptic: @ethersproject/{abi,abstract-provider,abstract-signer,hash,signing-key,transactions} v5.8.0
+    and @nomicfoundation/hardhat-verify 3.1.1, which pulled in ethers v5.
+
+== 2. Triage: what each finding could reach
+| Package | Pulled in by | Used for | Reaches the contracts or the shipped site? |
+| --- | --- | --- | --- |
+| vite 8.3.1 (launch-editor advisories; the high one is Windows-only) | direct | dev server and production build | No: the dev server's "open in editor" endpoint only; the built site is static files |
+| source-map-js 1.2.1 (denial of service on crafted source maps) | vite -> postcss | build tooling | No: runs only while building |
+| elliptic 6.6.1 (risky primitive) and the ethers v5 chain | hardhat-verify 3.1.1 | `npm run verify:sepolia` (Etherscan verification) | No: a command-line tool. The frontend uses ethers v6 (@noble/curves). The one "elliptic" string in the bundle is the text "elliptic curve" in a @noble/curves error message |
+None of the findings affected the Solidity contracts or the deployed frontend. They were still fixed, because the fixes are patch releases.
+
+== 3. Changes
+- package.json: only react, react-dom and ethers stay in "dependencies" (what the dApp needs at runtime);
+  Hardhat, the toolbox, OpenZeppelin, TypeScript, Vite, the React plugin and all @types move to "devDependencies".
+- vite 8.3.1 -> 8.3.5 (exact pin, as before); `npm audit fix` (no --force) updated the lockfile:
+  @nomicfoundation/hardhat-verify 3.1.1 -> 3.1.3 (drops ethers v5, so elliptic and 18 related packages are removed),
+  postcss 8.5.28 -> 8.5.31, source-map-js 1.2.1 -> 1.2.2, rolldown 1.2.11 -> 1.2.15, nanoid 3.3.19 -> 3.3.20.
+  No major-version changes.
+
+== 4. After
+$ npm audit
+found 0 vulnerabilities
+$ npm audit --omit=dev
+found 0 vulnerabilities
+
+== 5. Regression checks after the update
+| Command | Result |
+| --- | --- |
+| npm run check (compile, 53 tests, typecheck, build) | exit 0; 53 passing (46 Mocha, 7 Solidity) |
+| npm run demo | exit 0; five scenarios |
+| npm run slither | exit 0; same 14 low/informational results on DutchAuction.sol, 0 on GavoraToken.sol |
+| Pages build (--base /Blockchain-DutchPoint/, Sepolia default) | exit 0; assets under the sub-path |
+| npx hardhat verify --help (updated hardhat-verify) | loads and prints usage |
+| npm run dev against the running local node | VITE v8.3.5, dashboard HTTP 200 |

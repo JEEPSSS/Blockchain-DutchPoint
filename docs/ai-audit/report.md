@@ -384,6 +384,7 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
 | Frontend | 22 RPC reads every second; no bid history; owner-only buttons shown to everyone; raw error strings; "provisional allocation" estimated with the pro-rata rule | Block-driven refresh, event-based history, owner-gated issuer panel, decoded custom errors (`c689e3c`) |
 | Audit report | The Codex draft's two lead "issues" were hypothetical ("Inference: a simple implementation might…") and two others were bugs in its own test/demo scripts; none had before/after evidence | Replaced by this report; only defects reproduced on the original code are listed as findings |
 | Tooling | Slither never run ("not installed"); no fuzzing; no CI | Sections 6-7 |
+| Dependencies | `package.json` declared every build tool (Hardhat, Vite, TypeScript, type packages) as a runtime dependency, leaving only `@types/mocha` as a dev dependency. `npm audit --omit=dev` therefore could not separate tooling from runtime code, and reported all 10 advisories (2 high) as production issues | Only `react`, `react-dom` and `ethers` stay runtime dependencies. Patch updates (Vite 8.3.5, `hardhat-verify` 3.1.3) clear every advisory ([evidence 10](evidence/10-dependency-audit.txt)) |
 | Development log | Codex lists "DeFi lectures: gas wars, transaction ordering, Dutch auctions in liquidation contexts, and burn mechanics" as lecture material it used. The team confirmed Codex had the same slides as this review, and none of them mentions auctions, liquidations, gas wars or front-running. The invited talk's DeFi slides only show Aave, Compound, Kyber, Uniswap and Pendle. Only transaction ordering (Module 2 L3, slide 16) and burning (Module 3 L1, slide 25) are covered | Flagged in the log, where the claim is kept as Codex wrote it. [Appendix A](#appendix-a-course-concepts-applied) cites only slides that were checked |
 
 ### Issues in the second AI pass (Claude Code) caught by validation
@@ -413,6 +414,7 @@ The reviewing AI also made mistakes. They were caught by the same process:
 | Gas scaling | The same five calls (new bid, crossing bid with refund, finalize, claim, issuer withdrawal) measured after 1, 10, 50 and 100 earlier bidders, with a 1% tolerance. Mutation M3 plants a loop over bidders in `claimTokens` | Identical gas at every crowd size (spread 0). Under M3 the claim grows from 163,417 to 410,719 gas and the test fails ([`09`](evidence/09-gas-scaling.txt)) |
 | Coverage | `npm run coverage` | `DutchAuction.sol` and `GavoraToken.sol`: 100% lines and statements ([`07`](evidence/07-test-suite-and-coverage.txt)) |
 | Static analysis | Slither 0.11.6 on original and current code, token, and vulnerable demo | Original: 19 results incl. High `reentrancy-eth`. Current: 0 High; 4 Medium `incorrect-equality` false positives annotated inline; remaining Low/Info are by design ([`08`](evidence/08-slither.txt)) |
+| Dependency audit | `npm audit`, and `npm audit --omit=dev` for runtime-only packages; each advisory traced to the package that pulls it in and what it is used for | Before: 10 (2 high, 8 low), all in build or verification tooling, none in the contracts or the shipped site. After patch updates and the dependency split: 0 ([`10`](evidence/10-dependency-audit.txt)) |
 | Reentrancy demo | Same attacker vs. vulnerable and real auction | 11 ETH drained vs. 0.75 ETH own refund ([`05`](evidence/05-reentrancy-demo.txt)) |
 | End-to-end UI | Local node + deploy + seeded bids; headless Chrome with an injected test wallet clicks Connect, sell-out bid, Finalize, Claim | All steps confirmed; screenshots in [`screenshots/`](../demo/screenshots/) |
 | Visual checks | Light/dark mode, 1280/820/390 px widths | No horizontal page scroll at 390 px after fix |
@@ -450,6 +452,7 @@ The reviewing AI also made mistakes. They were caught by the same process:
 - A gas-scaling test that proves no call gets more expensive as bidders join, and `npm run gas` for
   per-function gas statistics.
 - Slither config with a Medium/High gate, CI workflow and coverage script.
+- Dependency hygiene: runtime vs. development dependencies split, and `npm audit` at 0 advisories.
 - A network-agnostic deploy script that writes Etherscan links, verification commands and a
   deployment record for public networks.
 - Local helpers: `seed:local` and `time:advance`.
