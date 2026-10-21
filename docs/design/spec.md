@@ -3,7 +3,7 @@
 DutchPoint is a decentralized Dutch auction platform that launches the Gavora (GVRA) ERC20 token. It is
 the SC4053 Blockchain Technology Option 2 project. This document is the specification the AI agents
 worked from; it was first written by Codex and then corrected after the audit (see
-[`ai-audit-report.md`](ai-audit-report.md), finding F1).
+[`ai-audit-report.md`](../ai-audit/report.md), finding F1).
 
 ## Sources
 

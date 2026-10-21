@@ -14,7 +14,7 @@ Ethereum. Connect your wallet to DutchPoint and bid for Gavora tokens using ETH:
 
 SC4053 Blockchain Technology, AY2026-27 Semester 1 - Development Project, Option 2.
 
-![DutchPoint dashboard](docs/screenshots/01-live-auction.png)
+![DutchPoint dashboard](docs/demo/screenshots/01-live-auction.png)
 
 ## Quick start (local)
 
@@ -50,7 +50,7 @@ It runs five scenarios on an in-process chain and prints the results:
 4. a reentrancy attack draining a deliberately vulnerable auction;
 5. the same attack failing against DutchPoint.
 
-The narrated video plan is in [`docs/demo-script.md`](docs/demo-script.md).
+The narrated video plan is in [`docs/demo/demo-script.md`](docs/demo/demo-script.md).
 
 ## Testing and security
 
@@ -85,21 +85,28 @@ deploys without starting, so the issuer can start the 20-minute window from the 
 ## Project structure
 
 ```text
-contracts/
-  GavoraToken.sol          ERC20 "Gavora" (GVRA): fixed supply, burnable, no owner, no mint
-  DutchAuction.sol         The auction engine
-  test/                    Test-only helpers: ReentrancyAttacker, RejectingReceiver,
-                           VulnerableAuction (deliberately vulnerable)
+contracts/                   On-chain code
+  GavoraToken.sol            ERC20 "Gavora" (GVRA): fixed supply, burnable, no owner, no mint
+  DutchAuction.sol           The auction engine
+  mocks/                     Test-only: ReentrancyAttacker, RejectingReceiver,
+                             VulnerableAuction (deliberately vulnerable)
 test/
-  DutchAuction.test.ts     Scenario and unit tests
-  AuditRegressions.test.ts Regression tests for audit findings F1-F4
-  Reentrancy.test.ts       Vulnerable vs. secure reentrancy demonstration
-  GavoraToken.test.ts      Token tests
-  solidity/                Fuzz and invariant tests (forge-std)
-scripts/                   deploy, demo, seed-local, advance-time, poc-crowd-out
-src/                       React + Vite frontend (components/, hooks/, lib/)
-docs/                      Spec, architecture, assumptions, AI audit report, evidence, screenshots
+  DutchAuction.test.ts       Scenario and unit tests
+  AuditRegressions.test.ts   Regression tests for audit findings F1-F4
+  Reentrancy.test.ts         Vulnerable vs. secure reentrancy demonstration
+  GavoraToken.test.ts        Token tests
+  solidity/                  Fuzz and invariant tests (forge-std)
+scripts/                     deploy, demo, seed-local, advance-time, poc-crowd-out
+frontend/                    Off-chain code: the React + Vite dApp
+  index.html, vite.config.ts
+  src/                       components/, hooks/, lib/, generated/ (ABIs and addresses)
+docs/
+  ai-audit/                  AI Audit Report, development log, evidence/, prompts/
+  design/                    Spec, architecture, assumptions, requirements checklist
+  demo/                      Demo script, screenshots/
 ```
+
+Everything installs with one `npm install` at the root; every command runs from the root.
 
 ## How the contracts work
 
@@ -115,21 +122,21 @@ docs/                      Spec, architecture, assumptions, AI audit report, evi
   - `burnRemainderAfterAllClaimed()` burns rounding dust.
 - There are no loops over bidders. Refunds follow checks-effects-interactions behind `ReentrancyGuard`.
 - The maths, including the exact clearing price when time alone clears the auction, is in
-  [`docs/spec.md`](docs/spec.md).
+  [`docs/design/spec.md`](docs/design/spec.md).
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| [`docs/ai-audit-report.md`](docs/ai-audit-report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence, and an appendix linking the design to the lectures) |
-| [`docs/evidence/`](docs/evidence/) | Before/after test logs, PoC output, mutation check, coverage, Slither |
-| [`docs/prompts/`](docs/prompts/README.md) | Prompt logs for ChatGPT, Codex and Claude Code |
-| [`docs/spec.md`](docs/spec.md) | Requirements and auction mathematics |
-| [`docs/architecture.md`](docs/architecture.md) | Contract, frontend and test architecture |
-| [`docs/assumptions.md`](docs/assumptions.md) | Interpretations of ambiguous requirements and questions for the TA |
-| [`docs/requirements-checklist.md`](docs/requirements-checklist.md) | Requirement → implementation → test |
-| [`docs/demo-script.md`](docs/demo-script.md) | Under-10-minute demo plan |
-| [`docs/ai-development-log.md`](docs/ai-development-log.md) | Chronological AI development log |
+| [`docs/ai-audit/report.md`](docs/ai-audit/report.md) | **AI Audit Report** (8 sections, findings F1-F6 with evidence, and an appendix linking the design to the lectures) |
+| [`docs/ai-audit/evidence/`](docs/ai-audit/evidence/) | Before/after test logs, PoC output, mutation check, coverage, Slither |
+| [`docs/ai-audit/prompts/`](docs/ai-audit/prompts/README.md) | Prompt logs for ChatGPT, Codex and Claude Code |
+| [`docs/design/spec.md`](docs/design/spec.md) | Requirements and auction mathematics |
+| [`docs/design/architecture.md`](docs/design/architecture.md) | Contract, frontend and test architecture |
+| [`docs/design/assumptions.md`](docs/design/assumptions.md) | Interpretations of ambiguous requirements and questions for the TA |
+| [`docs/design/requirements-checklist.md`](docs/design/requirements-checklist.md) | Requirement → implementation → test |
+| [`docs/demo/demo-script.md`](docs/demo/demo-script.md) | Under-10-minute demo plan |
+| [`docs/ai-audit/development-log.md`](docs/ai-audit/development-log.md) | Chronological AI development log |
 
 ## Team
 

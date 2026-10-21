@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { network } from "hardhat";
 
 // Regression tests for defects found while reviewing the AI-generated auction.
-// Each test encodes the intended behaviour; see docs/ai-audit-report.md for the findings.
+// Each test encodes the intended behaviour; see docs/ai-audit/report.md for the findings.
 
 const TOKEN_SCALE = 10n ** 18n;
 const DURATION = 1200n;

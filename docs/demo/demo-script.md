@@ -45,12 +45,12 @@ the total supply reduced.
 1. In the `npm run demo` output, show scenarios 4 and 5: the same attacker drains **11 ETH** from the
    deliberately vulnerable auction, but gets only its own **0.75 ETH** refund from DutchPoint.
 2. Briefly show `npm test` (52 passing) and the coverage table, then the Slither summary in
-   `docs/evidence/08-slither.txt`.
+   `docs/ai-audit/evidence/08-slither.txt`.
 
 ## 7:30-9:00 - AI audit highlights
 
-Open `docs/ai-audit-report.md`:
-- F1: the AI's pro-rata rule let a whale take 91% of the supply. Show `docs/evidence/02` vs. `04`.
-- Show the failing-then-passing regression tests (`docs/evidence/01` → `03`).
+Open `docs/ai-audit/report.md`:
+- F1: the AI's pro-rata rule let a whale take 91% of the supply. Show `docs/ai-audit/evidence/02` vs. `04`.
+- Show the failing-then-passing regression tests (`docs/ai-audit/evidence/01` → `03`).
 - Close with the main lesson: AI handled the stated requirements well, but missed adversarial
   economics and cross-layer bugs, which only tests and a second model caught.

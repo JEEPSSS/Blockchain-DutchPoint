@@ -91,7 +91,7 @@ async function main() {
     }
   }
   console.log(START_AUCTION ? "Auction started: the 20-minute window is open." : "Auction deployed but not started.");
-  console.log("Frontend artifacts written to src/generated/");
+  console.log("Frontend artifacts written to frontend/src/generated/");
 
   // Keep a permanent record of public-network deployments as evidence for the audit report.
   if (chainId !== 31337) {

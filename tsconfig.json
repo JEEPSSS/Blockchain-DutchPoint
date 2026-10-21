@@ -1,7 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
+    { "path": "./frontend" },
     { "path": "./tsconfig.hardhat.json" }
   ]
 }

@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {DutchAuction} from "../../contracts/DutchAuction.sol";
 import {GavoraToken} from "../../contracts/GavoraToken.sol";
-import {RejectingReceiver, IAuctionForRejectingReceiver} from "../../contracts/test/RejectingReceiver.sol";
+import {RejectingReceiver, IAuctionForRejectingReceiver} from "../../contracts/mocks/RejectingReceiver.sol";
 
 /// @notice Drives the auction through random sequences of bids, time jumps, finalization,
 ///         claims and withdrawals. The fuzzer calls these functions in random order.

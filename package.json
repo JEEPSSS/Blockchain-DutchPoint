@@ -20,9 +20,9 @@
     "keystore": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat keystore",
     "demo": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/demo.ts",
     "export:frontend": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/export-frontend.ts",
-    "dev": "vite --host 127.0.0.1",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.hardhat.json",
-    "build": "tsc -b tsconfig.app.json && vite build",
+    "dev": "vite frontend --host 127.0.0.1",
+    "typecheck": "tsc --noEmit -p frontend && tsc --noEmit -p tsconfig.hardhat.json",
+    "build": "tsc -b frontend && vite build frontend",
     "check": "npm run compile && npm run test && npm run typecheck && npm run build"
   },
   "dependencies": {

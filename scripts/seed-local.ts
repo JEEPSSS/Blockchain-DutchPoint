@@ -12,7 +12,7 @@ if (networkName !== "localhost") {
 }
 
 const deployments = JSON.parse(
-  await readFile(path.join(process.cwd(), "src", "generated", "deployments.local.json"), "utf8")
+  await readFile(path.join(process.cwd(), "frontend", "src", "generated", "deployments.local.json"), "utf8")
 );
 const deployment = deployments["31337"];
 if (!deployment) {

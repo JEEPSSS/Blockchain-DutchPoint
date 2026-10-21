@@ -38,5 +38,5 @@ jobs:
       - run: pip install slither-analyzer==0.11.6 solc-select
       - run: solc-select install 0.8.28 && solc-select use 0.8.28
       # Fails on any Medium or High finding; triaged findings are documented in
-      # docs/ai-audit-report.md and docs/evidence/08-slither.txt.
+      # docs/ai-audit/report.md and docs/ai-audit/evidence/08-slither.txt.
       - run: npm run slither

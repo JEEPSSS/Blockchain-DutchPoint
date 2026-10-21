@@ -9,4 +9,4 @@ tmp/
 types/
 *.tsbuildinfo
 *.pdf
-src/generated/deployments.local.json
+frontend/src/generated/deployments.local.json

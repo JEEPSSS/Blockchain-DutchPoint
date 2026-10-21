@@ -50,7 +50,7 @@
 - Custom errors for every failure, decoded into plain messages by the UI.
 - The constructor rejects parameters under which the auction could never clear.
 
-### Test-only contracts (`contracts/test/`)
+### Test-only contracts (`contracts/mocks/`)
 
 - `RejectingReceiver`: a bidder contract that rejects ETH, to prove refunds fall back to credits and
   cannot be blocked.
@@ -58,7 +58,7 @@
 - `VulnerableAuction`: **deliberately vulnerable** refund path (transfer before state update, no guard),
   used only to show the attack succeeding.
 
-## Frontend (`src/`)
+## Frontend (`frontend/src/`)
 
 | Module | Responsibility |
 | --- | --- |

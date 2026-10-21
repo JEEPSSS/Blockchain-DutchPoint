@@ -87,7 +87,7 @@ trace back to them:
 | Tool | Role |
 | --- | --- |
 | ChatGPT | Planning: naming, auction flow, contract and function outline, security checklist, test plan ([`prompts/chatgpt-plan.txt`](prompts/chatgpt-plan.txt)) |
-| Codex desktop agent | First implementation "FairLaunch": contracts, Hardhat tests, React app, docs (commit `0a75a78`); its log is [`ai-development-log.md`](ai-development-log.md) |
+| Codex desktop agent | First implementation "FairLaunch": contracts, Hardhat tests, React app, docs (commit `0a75a78`); its log is [`development-log.md`](development-log.md) |
 | Claude Code (Claude Opus 5.5, VS Code extension) | Cross-model review of the plan and code, regression tests, contract fixes, fuzz/invariant tests, Slither triage, CI, deploy tooling, frontend rebuild, this report ([`prompts/claude-code-session.md`](prompts/claude-code-session.md)) |
 
 ### Toolchain
@@ -118,14 +118,14 @@ reviewed between members before merging.
 
 ## 3. Specification Engineering & Prompt Logs
 
-- **Specification files:** [`spec.md`](spec.md) (auction mathematics and conservation rules),
-  [`architecture.md`](architecture.md), [`assumptions.md`](assumptions.md) (ambiguities and TA
-  questions), [`requirements-checklist.md`](requirements-checklist.md) (requirement → code → test).
+- **Specification files:** [`spec.md`](../design/spec.md) (auction mathematics and conservation rules),
+  [`architecture.md`](../design/architecture.md), [`assumptions.md`](../design/assumptions.md) (ambiguities and TA
+  questions), [`requirements-checklist.md`](../design/requirements-checklist.md) (requirement → code → test).
   Codex wrote these before its Solidity code. They were then updated to the corrected
   allocation rule, so the AI was always working from a written spec, never from chat alone.
 - **Prompt logs:** [`prompts/`](prompts/README.md).
   - Claude Code prompts are reproduced verbatim with what each produced.
-  - The Codex prompt is summarised in [`ai-development-log.md`](ai-development-log.md).
+  - The Codex prompt is summarised in [`development-log.md`](development-log.md).
   - The ChatGPT output is kept as-is.
 - **Context provided to the agents:** the brief (`project.pdf`), the ChatGPT plan, and the repository
   itself. For review work the agent ran the code (tests, scripts, a local node) rather than only reading
@@ -166,7 +166,7 @@ Both AI tools proposed broadly the same two-contract design. They differed on on
 
 The final architecture keeps Codex's structure (immutable sale parameters, pull refunds,
 `ReentrancyGuard`, custom errors, no loops). It adopts the ChatGPT plan's crossing-bid rule, and it
-replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.md`](architecture.md)).
+replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.md`](../design/architecture.md)).
 
 ## 5. Problems Discovered & Vulnerability Analysis
 
@@ -216,7 +216,7 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
   98.75 ETH returned in the bid transaction ([`evidence/04`](evidence/04-crowd-out-poc-after-fix.txt)).
 - Fuzz property `testFuzz_SettlementIsUniformFairAndConserving` (1,000 random runs) asserts that only the
   clearing bid can be partly filled, that the surplus is returned immediately, and that everyone pays one price.
-- Screenshot [`02-sellout-bid-auto-refund.png`](screenshots/02-sellout-bid-auto-refund.png) shows the same
+- Screenshot [`02-sellout-bid-auto-refund.png`](../demo/screenshots/02-sellout-bid-auto-refund.png) shows the same
   behaviour in the UI.
 
 ### F2 - Views ignore clearing caused by time passing (Medium)
@@ -240,7 +240,7 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
 **How it was fixed.**
 - A single `clearingState()` view now derives explicit and time-based clearing (`20e24b1`). `status()`,
   `currentPrice()`, `remainingCapacity()`, `tokensOwed()` and `_contribute()` all use it.
-- The frontend mirrors the same rules in BigInt (`src/lib/auctionMath.ts`, `c689e3c`), so the display is
+- The frontend mirrors the same rules in BigInt (`frontend/src/lib/auctionMath.ts`, `c689e3c`), so the display is
   right even between blocks.
 
 **Evidence the fix works.**
@@ -249,7 +249,7 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
   point when falling prices alone clear the auction`.
 - In the UI check, an auction with 8 ETH committed and no bids after minute 7 is shown as cleared at
   0.008 ETH at minute 16, then as ready to finalize after minute 20
-  ([`06-time-cleared-ready-to-finalize.png`](screenshots/06-time-cleared-ready-to-finalize.png)).
+  ([`06-time-cleared-ready-to-finalize.png`](../demo/screenshots/06-time-cleared-ready-to-finalize.png)).
 
 ### F3 - A cleared auction can never be finalized from the UI (Medium)
 
@@ -276,9 +276,9 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
 - Regression test F3: `expected 2 to equal 3` before, passing after.
 - Test `moves through Pending, Active, Cleared, AwaitingFinalization and Finalized`.
 - The end-to-end UI run sold out the auction, clicked Finalize and Claim, and confirmed the claim
-  ([`03-finalized-and-claimed.png`](screenshots/03-finalized-and-claimed.png)).
+  ([`03-finalized-and-claimed.png`](../demo/screenshots/03-finalized-and-claimed.png)).
 - A time-cleared auction shows "Ready to finalize" after the window ends
-  ([`06-time-cleared-ready-to-finalize.png`](screenshots/06-time-cleared-ready-to-finalize.png)).
+  ([`06-time-cleared-ready-to-finalize.png`](../demo/screenshots/06-time-cleared-ready-to-finalize.png)).
 
 ### F4 - Issuer proceeds locked behind every bidder's claim (Medium)
 
@@ -395,7 +395,7 @@ The reviewing AI also made mistakes. They were caught by the same process:
 | Coverage | `npm run coverage` | `DutchAuction.sol` and `GavoraToken.sol`: 100% lines and statements ([`07`](evidence/07-test-suite-and-coverage.txt)) |
 | Static analysis | Slither 0.11.6 on original and current code, token, and vulnerable demo | Original: 19 results incl. High `reentrancy-eth`. Current: 0 High; 4 Medium `incorrect-equality` false positives annotated inline; remaining Low/Info are by design ([`08`](evidence/08-slither.txt)) |
 | Reentrancy demo | Same attacker vs. vulnerable and real auction | 11 ETH drained vs. 0.75 ETH own refund ([`05`](evidence/05-reentrancy-demo.txt)) |
-| End-to-end UI | Local node + deploy + seeded bids; headless Chrome with an injected test wallet clicks Connect, sell-out bid, Finalize, Claim | All steps confirmed; screenshots in [`screenshots/`](screenshots/) |
+| End-to-end UI | Local node + deploy + seeded bids; headless Chrome with an injected test wallet clicks Connect, sell-out bid, Finalize, Claim | All steps confirmed; screenshots in [`screenshots/`](../demo/screenshots/) |
 | Visual checks | Light/dark mode, 1280/820/390 px widths | No horizontal page scroll at 390 px after fix |
 | CI | `.github/workflows/ci.yml`: compile, coverage, typecheck, build, demo, Slither | Added; **not yet run on GitHub** (branch not pushed) |
 | Testnet | `npm run deploy:sepolia` records addresses and tx hashes in `deployments/sepolia.json` | **Not yet run** - TODO (team) if desired |
@@ -488,12 +488,12 @@ each deck: Module 2 Lectures 3-4 (Bitcoin mining and consensus), Module 3 Lectur
 | Lecture concept | How DutchPoint applies it |
 | --- | --- |
 | A payment to a contract account runs its payable fallback code (M3 L1, slides 15-16 and 19) | `receive()` treats a plain ETH transfer as a bid. In the other direction, a refund to a contract bidder runs *that bidder's* code, so a refund can fail or re-enter. Both cases are tested (`RejectingReceiver`, `ReentrancyAttacker`) |
-| Contracts send internal messages as a chain reaction to an EOA's transaction (M3 L1, slides 27-30) | The surplus refund is an internal message inside the bidder's own transaction. A reentrancy attack is a nested message back into the auction, which `nonReentrant` and checks-effects-interactions block. `docs/evidence/05` shows the same attacker draining a vulnerable contract |
+| Contracts send internal messages as a chain reaction to an EOA's transaction (M3 L1, slides 27-30) | The surplus refund is an internal message inside the bidder's own transaction. A reentrancy attack is a nested message back into the auction, which `nonReentrant` and checks-effects-interactions block. [`evidence/05`](evidence/05-reentrancy-demo.txt) shows the same attacker draining a vulnerable contract |
 | The unsafe faucet: anyone can withdraw, via `msg.sender.transfer` (M3 L2, slide 19) | Every withdrawal is scoped: a bidder can only withdraw their own refund credit, and only the issuer can withdraw proceeds. ETH goes out through `call` rather than `transfer`. `transfer`'s 2,300-gas stipend breaks smart-contract wallets, so the protection comes from the guard and state ordering, not from a gas limit |
 | Gas limit per transaction; running out of gas aborts it; gas deters denial of service (M3 L2, slides 13-15) | No function loops over bidders. Each bidder claims for themselves, so the gas cost of every call is independent of how many people bid, and no bidder can make settlement too expensive for others |
 | Contract code is immutable; a fix means a new instance (M3 L2, slide 18) | One auction per deployment, no upgrade proxy, and immutable sale parameters. A deployed bug cannot be patched, which is why the audit in §5 happened before any deployment |
 | A block's timestamp only has to be later than its parent's (M3 L1, slide 8) | The price is a pure function of `block.timestamp`. On proof-of-stake Ethereum each 12-second slot fixes the timestamp, and a whole slot moves the price by 12 / 1,200 = 1% of the start-to-reserve range (0.00015 ETH per GVRA at the default prices). No producer can shift it further |
-| Miners order transactions by priority and fee, and may delay a transaction (M2 L3, slide 16; M2 L4, slide 12) | A uniform falling price removes the reason to race: waiting only lowers the price, and everyone pays the clearing price. The one race left is at sell-out, where the first bid to arrive gets the remaining capacity. It only concerns the last slice of supply, and it is listed as a known limitation in [`assumptions.md`](assumptions.md#known-limitations) |
+| Miners order transactions by priority and fee, and may delay a transaction (M2 L3, slide 16; M2 L4, slide 12) | A uniform falling price removes the reason to race: waiting only lowers the price, and everyone pays the clearing price. The one race left is at sell-out, where the first bid to arrive gets the remaining capacity. It only concerns the last slice of supply, and it is listed as a known limitation in [`assumptions.md`](../design/assumptions.md#known-limitations) |
 | Ether sent to a designated burn address is lost forever (M3 L1, slide 25) | Unsold GVRA goes further than a burn address: `ERC20Burnable.burn` lowers `totalSupply`, so the tokens leave the supply itself, not just circulation |
 | A malicious ERC20 can lie in `transfer` (invited talk, slide 34) | The auction trusts its token, so it is only deployed with `GavoraToken`: unmodified OpenZeppelin ERC20 code with no owner, no mint and no hooks. `start()` refuses to open unless the auction holds the full sale supply, and claims use `SafeERC20` |
 | ERC20 allowance workflow, `approve` then `transferFrom` (invited talk, slides 29-30) | Not needed. The issuer funds the auction with a direct `transfer`, and bidders pay in ETH, so the UI never asks anyone to approve a token spend |

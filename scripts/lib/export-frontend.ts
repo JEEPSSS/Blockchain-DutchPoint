@@ -11,7 +11,7 @@ export type Deployment = {
 };
 
 const LOCAL_CHAIN_ID = 31337;
-const generatedDir = path.join(process.cwd(), "src", "generated");
+const generatedDir = path.join(process.cwd(), "frontend", "src", "generated");
 // Public deployments are committed; local ones change on every run and are gitignored.
 const deploymentsFile = (chainId: number) =>
   path.join(generatedDir, chainId === LOCAL_CHAIN_ID ? "deployments.local.json" : "deployments.json");

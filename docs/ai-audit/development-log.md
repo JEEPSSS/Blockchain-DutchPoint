@@ -210,3 +210,34 @@ adopt arrival-order filling; Sepolia optional.
 | Local node + `deploy:local` + `seed:local` + headless Chrome UI run | Pass | Connect, sell-out bid with refund, finalize, claim; light/dark; 390/820/1280 px |
 | GitHub Actions CI | Not run yet | Runs when the branch is pushed |
 | `npm run deploy:sepolia` | Not run | Optional; needs a funded test wallet and RPC key |
+
+## 2026-10-21 - Merge to main, audit follow-ups and repository restructure
+
+Tool: Claude Code. PR #1 was merged into `main`, and the team now commits directly to `main`.
+GitHub Actions CI passed on the PR and on `main`.
+
+| Commit | Change |
+| --- | --- |
+| `a7b6565` | AI Audit Report §1 rewritten (how the pre-AI scope was recorded, intended contract logic, delivery constraints, open questions linked to F1-F6); Appendix A maps lecture concepts to the design; three new known limitations |
+| `7f32aad` | Recorded Codex's unsupported lecture citation (see the audit note under "2026-09-25 - Source Reading Notes") |
+| this entry | Repository restructure, below |
+
+Restructure (team-approved; `git mv`, so file history is kept):
+
+| Before | After | Why |
+| --- | --- | --- |
+| `index.html`, `vite.config.ts`, `tsconfig.app.json`, `src/` | `frontend/` | Separates on-chain code from the browser app, mirroring the course's client-blockchain architecture |
+| `contracts/test/` | `contracts/mocks/` | Avoids confusion with `test/`; makes clear the attacker and vulnerable contracts are not production code |
+| `docs/ai-audit-report.md`, `ai-development-log.md`, `evidence/`, `prompts/` | `docs/ai-audit/` | Keeps the graded report together with everything it cites |
+| `docs/spec.md`, `architecture.md`, `assumptions.md`, `requirements-checklist.md` | `docs/design/` | Groups the design documents |
+| `docs/demo-script.md`, `screenshots/` | `docs/demo/` | Groups the demo material |
+
+Paths quoted in evidence files and in earlier entries of this log are left as they were at the time.
+
+| Check after the move | Result |
+| --- | --- |
+| Clean `npm run check` (compile, 52 tests, typecheck, build) | Pass; build output now in `frontend/dist/` |
+| `npm run demo`, `npm run slither` | Pass; same 14 low/informational Slither results as before |
+| `npm run node` + `deploy:local` + `seed:local` + `npm run dev` | Pass; ABIs and addresses written to and read from `frontend/src/generated/` |
+| Root `.env` reaches the frontend (`envDir: ".."`) | Pass |
+| Relative Markdown links in all tracked docs | 0 broken |
