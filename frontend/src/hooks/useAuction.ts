@@ -55,6 +55,9 @@ export type AuctionData = {
 };
 
 const FALLBACK_REFRESH_MS = 15_000;
+// Public RPCs cap the block range of one eth_getLogs call (PublicNode's keyless Sepolia RPC allows
+// 50,000 blocks, about a week), so the bid history is scanned in chunks.
+const LOG_CHUNK_BLOCKS = 10_000;
 
 export function useAuction(
   provider: Provider | null,
@@ -229,11 +232,12 @@ export function useAuction(
         : null
     });
 
-    // Bid history: fetch only blocks we have not scanned yet.
+    // Bid history: fetch only blocks we have not scanned yet, one chunk at a time.
     const latest = block?.number ?? 0;
-    const from = Math.max(deployment.deployedAtBlock, lastBidBlock.current + 1);
-    if (latest >= from) {
-      const logs = await auction.queryFilter(auction.filters.ContributionReceived(), from, latest);
+    let from = Math.max(deployment.deployedAtBlock, lastBidBlock.current + 1);
+    while (from <= latest) {
+      const to = Math.min(latest, from + LOG_CHUNK_BLOCKS - 1);
+      const logs = await auction.queryFilter(auction.filters.ContributionReceived(), from, to);
       const fresh: Bid[] = [];
       for (const log of logs) {
         if (!(log instanceof EventLog)) {
@@ -251,10 +255,12 @@ export function useAuction(
           totalCommitted: log.args.totalCommitted as bigint
         });
       }
-      lastBidBlock.current = latest;
+      // Recorded per chunk, so a failed request resumes here instead of rescanning from the start.
+      lastBidBlock.current = to;
       if (fresh.length > 0) {
         setBids((previous) => [...previous, ...fresh]);
       }
+      from = to + 1;
     }
     setError("");
     setOffline(false);
