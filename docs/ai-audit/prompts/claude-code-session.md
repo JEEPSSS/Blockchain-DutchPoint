@@ -316,3 +316,37 @@ to 0, re-ran every check, and wrote evidence 10 (`c55fcc1`).
 Recommended including the git history in the zip, because the report cites commits as evidence. Added
 `npm run package` (`4981dbc`) and tested the result as a grader would: unzipped it into an empty folder,
 then ran `npm ci`, the full check and the demo. Explained Sepolia again, with a recommendation.
+
+---
+
+## Day 3 - manual MetaMask run-through (22 October)
+
+Prompts 26-37 were short questions asked while the student tested the dApp in MetaMask, so they are
+grouped here:
+
+26. "Do I need to test MetaMask on the testnet and on localhost? Can I use my real MetaMask account?"
+27. "I plan to record the demo next week. For the localhost test, do I create another account or use my
+    existing one?"
+28. "After this, do we still need to test on Sepolia, and with which account?"
+29. "So I'll have two accounts: my real one and one for the testnet?"
+30. "Let's restart; I'm on localhost now. What's next?"
+31. "My wallet is connected on chain 56."
+32. "I can see Hardhat Local now, and my wallet is connected. What's next?"
+33. "I've connected the test bidder, but the site says sold out. Can you reset the timer?"
+34. "My 1 ETH bid shows in the history, but where is the sell-out button?"
+35. "How do I import tokens in MetaMask?"
+36. "The tokens appear in MetaMask: I have 1,000."
+37. "Did I get 80 GVRA instead of 72 because the price fell? I've withdrawn the 12.5 ETH as the issuer.
+    There's no light/dark mode setting on the site."
+
+**Agent response:**
+- Separated what was required (the localhost test) from what was optional (Sepolia, only if deployed).
+- Advised keeping the real-money account out of the project, using imported test keys only on the local
+  chain, and never using those public keys on a public network. Suggested a fresh key, unrelated to the
+  recovery phrase, for any Sepolia account. Corrected a stale token address it had given earlier.
+- Diagnosed the "sold out" report as time-based clearing working as designed, and started a fresh
+  auction without seeded bids.
+- Guided the run step by step, then verified every step from chain state. Recorded the run in report §6
+  and the development log.
+- Explained uniform pricing: the student committed ETH, not a token count, so the lower final price gave
+  more GVRA. Explained that dark mode follows the operating system setting.

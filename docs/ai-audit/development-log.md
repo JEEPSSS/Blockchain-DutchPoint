@@ -294,3 +294,24 @@ Grader simulation on the zip built from `4981dbc` (3.1 MB), unzipped into an emp
 | `npm ci` | 216 packages, 0 vulnerabilities |
 | `npm run check` | Compiled 7 files; 53 passing; build succeeded |
 | `npm run demo` | Five scenarios; no tracked files changed by the run |
+
+## 2026-10-22 - Manual run-through with the real MetaMask extension
+
+A student ran the local dApp in Chrome with MetaMask (fresh auction, no seeded bids), guided step by step.
+The wallet started on BNB Chain (chain 56). The app showed "DutchPoint isn't deployed on Chain 56" and
+its *Switch to Hardhat Local* button added and switched the network. The agent then read the auction
+state back from the node:
+
+| Step | On-chain result |
+| --- | --- |
+| Bid 1 ETH | Accepted in full at 0.013875 ETH/GVRA |
+| Sell-out bid (11.75 ETH) | 11.5 ETH accepted at 0.0125; `SurplusRefunded` 0.25 ETH in the same transaction; status Sold out |
+| +20 min, finalize, claim | Finalized at 0.0125 ETH/GVRA; 1,000 GVRA sold and claimed (80 from the 1 ETH bid, above its 72 GVRA minimum quote); 0 burned |
+| Issuer withdrawal (12.5 ETH) | Done from the issuer account; the student confirmed the ETH in MetaMask |
+
+Things the run surfaced (no defects):
+- An earlier seeded auction showed "Sold out" while the student was still setting up. The 8 ETH of
+  seeded bids could buy the whole supply once the price reached 0.008 (minute 16), so time alone cleared
+  it. This is the intended behaviour, fixed in F2.
+- Usability notes for possible polish: the *Sell-out* chip was hard to spot; adding GVRA to MetaMask
+  needed manual *Import tokens*; and dark mode follows the OS setting with no toggle.

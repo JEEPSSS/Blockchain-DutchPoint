@@ -24,7 +24,8 @@ outputs are committed under [`evidence/`](evidence/).
 
 Validation: 53 tests (46 Mocha + 3 fuzz tests x 1,000 runs + 4 invariants x 256 runs), **100% line and
 statement coverage** of `DutchAuction.sol` and `GavoraToken.sol`, a mutation check, a gas-scaling test
-(1 to 100 bidders), Slither before and after, and an end-to-end run of the real UI in headless Chrome.
+(1 to 100 bidders), Slither before and after, an end-to-end run of the real UI in headless Chrome, and a manual run with the real MetaMask
+extension.
 
 ---
 
@@ -417,6 +418,7 @@ The reviewing AI also made mistakes. They were caught by the same process:
 | Dependency audit | `npm audit`, and `npm audit --omit=dev` for runtime-only packages; each advisory traced to the package that pulls it in and what it is used for | Before: 10 (2 high, 8 low), all in build or verification tooling, none in the contracts or the shipped site. After patch updates and the dependency split: 0 ([`10`](evidence/10-dependency-audit.txt)) |
 | Reentrancy demo | Same attacker vs. vulnerable and real auction | 11 ETH drained vs. 0.75 ETH own refund ([`05`](evidence/05-reentrancy-demo.txt)) |
 | End-to-end UI | Local node + deploy + seeded bids; headless Chrome with an injected test wallet clicks Connect, sell-out bid, Finalize, Claim | All steps confirmed; screenshots in [`screenshots/`](../demo/screenshots/) |
+| Manual MetaMask run | A student drove the local dApp with the real MetaMask extension: network switch (from BNB Chain), imported test accounts, a 1 ETH bid, a sell-out bid, +20 min, finalize, claim, issuer withdrawal. The chain state was then read back | All steps worked. 11.75 ETH sent, 11.5 ETH accepted and 0.25 ETH refunded in the same transaction. Both bids settled at 0.0125 ETH/GVRA (the 1 ETH bid got 80 GVRA, against the 72 quoted as its minimum). 1,000 GVRA claimed, and 12.5 ETH withdrawn by the issuer |
 | Visual checks | Light/dark mode, 1280/820/390 px widths | No horizontal page scroll at 390 px after fix |
 | CI | `.github/workflows/ci.yml`: compile, coverage, typecheck, build, demo, Slither | Passing on GitHub Actions for the PR and for every push to `main` |
 | Testnet | `npm run deploy:sepolia` records addresses and tx hashes in `deployments/sepolia.json` | **Not yet run** - TODO (team) if desired |
