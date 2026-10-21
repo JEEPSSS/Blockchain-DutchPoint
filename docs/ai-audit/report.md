@@ -22,9 +22,9 @@ outputs are committed under [`evidence/`](evidence/).
 | F5 | Low | State written after external calls (dead "restore then revert" code) - flagged High by Slither | Fixed (`20e24b1`) |
 | F6 | Low | The reentrancy "demonstration" could not fail, so it proved nothing | Fixed (`031b753`) |
 
-Validation: 52 tests (45 Mocha + 3 fuzz tests x 1,000 runs + 4 invariants x 256 runs), **100% line and
-statement coverage** of `DutchAuction.sol` and `GavoraToken.sol`, a mutation check, Slither before and
-after, and an end-to-end run of the real UI in headless Chrome.
+Validation: 53 tests (46 Mocha + 3 fuzz tests x 1,000 runs + 4 invariants x 256 runs), **100% line and
+statement coverage** of `DutchAuction.sol` and `GavoraToken.sol`, a mutation check, a gas-scaling test
+(1 to 100 bidders), Slither before and after, and an end-to-end run of the real UI in headless Chrome.
 
 ---
 
@@ -388,16 +388,17 @@ The reviewing AI also made mistakes. They were caught by the same process:
 | Layer | What | Result |
 | --- | --- | --- |
 | Regression tests | F1-F4 encoded as tests, run before and after the fix | 4 failing → 4 passing ([`01`](evidence/01-regressions-before-fix.txt), [`03`](evidence/03-regressions-after-fix.txt)) |
-| Unit and scenario tests (Mocha) | Configuration, price, bidding, crossing bid, both clearing modes, status machine, claims, dust burn, refunds (incl. ETH-rejecting bidder), issuer access control, conservation, token | 45 passing |
+| Unit and scenario tests (Mocha) | Configuration, price, bidding, crossing bid, both clearing modes, status machine, claims, dust burn, refunds (incl. ETH-rejecting bidder), issuer access control, conservation, token, gas scaling | 46 passing |
 | Fuzz tests (Solidity, forge-std) | Price monotonic and bounded; random bidders/amounts/times settle uniformly, fairly and conservatively; exact time-clearing price | 3 tests × 1,000 runs |
 | Invariant tests | Handler drives random bids, time jumps, finalization, claims and withdrawals (incl. a rejecting bidder). Invariants: ETH fully backed, tokens conserved, demand ≤ supply, one uniform price | 4 invariants × 256 runs × depth 50 |
 | Mutation check | Plant M1 (round time-clearing price down) and M2 (issuer withdraws raw balance), confirm failures, restore | M1: 6/7 property tests fail; M2: 3/7 fail ([`06`](evidence/06-mutation-check.txt)) |
+| Gas scaling | The same five calls (new bid, crossing bid with refund, finalize, claim, issuer withdrawal) measured after 1, 10, 50 and 100 earlier bidders, with a 1% tolerance. Mutation M3 plants a loop over bidders in `claimTokens` | Identical gas at every crowd size (spread 0). Under M3 the claim grows from 163,417 to 410,719 gas and the test fails ([`09`](evidence/09-gas-scaling.txt)) |
 | Coverage | `npm run coverage` | `DutchAuction.sol` and `GavoraToken.sol`: 100% lines and statements ([`07`](evidence/07-test-suite-and-coverage.txt)) |
 | Static analysis | Slither 0.11.6 on original and current code, token, and vulnerable demo | Original: 19 results incl. High `reentrancy-eth`. Current: 0 High; 4 Medium `incorrect-equality` false positives annotated inline; remaining Low/Info are by design ([`08`](evidence/08-slither.txt)) |
 | Reentrancy demo | Same attacker vs. vulnerable and real auction | 11 ETH drained vs. 0.75 ETH own refund ([`05`](evidence/05-reentrancy-demo.txt)) |
 | End-to-end UI | Local node + deploy + seeded bids; headless Chrome with an injected test wallet clicks Connect, sell-out bid, Finalize, Claim | All steps confirmed; screenshots in [`screenshots/`](../demo/screenshots/) |
 | Visual checks | Light/dark mode, 1280/820/390 px widths | No horizontal page scroll at 390 px after fix |
-| CI | `.github/workflows/ci.yml`: compile, coverage, typecheck, build, demo, Slither | Added; **not yet run on GitHub** (branch not pushed) |
+| CI | `.github/workflows/ci.yml`: compile, coverage, typecheck, build, demo, Slither | Passing on GitHub Actions for the PR and for every push to `main` |
 | Testnet | `npm run deploy:sepolia` records addresses and tx hashes in `deployments/sepolia.json` | **Not yet run** - TODO (team) if desired |
 
 **Slither triage (current contract).**
@@ -428,6 +429,8 @@ The reviewing AI also made mistakes. They were caught by the same process:
 **Testing and tooling**
 - Fuzz and invariant suite plus the mutation check, a regression suite, and a reentrancy demonstration
   with a vulnerable baseline.
+- A gas-scaling test that proves no call gets more expensive as bidders join, and `npm run gas` for
+  per-function gas statistics.
 - Slither config with a Medium/High gate, CI workflow and coverage script.
 - A network-agnostic deploy script that writes Etherscan links, verification commands and a
   deployment record for public networks.
@@ -490,7 +493,7 @@ each deck: Module 2 Lectures 3-4 (Bitcoin mining and consensus), Module 3 Lectur
 | A payment to a contract account runs its payable fallback code (M3 L1, slides 15-16 and 19) | `receive()` treats a plain ETH transfer as a bid. In the other direction, a refund to a contract bidder runs *that bidder's* code, so a refund can fail or re-enter. Both cases are tested (`RejectingReceiver`, `ReentrancyAttacker`) |
 | Contracts send internal messages as a chain reaction to an EOA's transaction (M3 L1, slides 27-30) | The surplus refund is an internal message inside the bidder's own transaction. A reentrancy attack is a nested message back into the auction, which `nonReentrant` and checks-effects-interactions block. [`evidence/05`](evidence/05-reentrancy-demo.txt) shows the same attacker draining a vulnerable contract |
 | The unsafe faucet: anyone can withdraw, via `msg.sender.transfer` (M3 L2, slide 19) | Every withdrawal is scoped: a bidder can only withdraw their own refund credit, and only the issuer can withdraw proceeds. ETH goes out through `call` rather than `transfer`. `transfer`'s 2,300-gas stipend breaks smart-contract wallets, so the protection comes from the guard and state ordering, not from a gas limit |
-| Gas limit per transaction; running out of gas aborts it; gas deters denial of service (M3 L2, slides 13-15) | No function loops over bidders. Each bidder claims for themselves, so the gas cost of every call is independent of how many people bid, and no bidder can make settlement too expensive for others |
+| Gas limit per transaction; running out of gas aborts it; gas deters denial of service (M3 L2, slides 13-15) | No function loops over bidders. Each bidder claims for themselves, so the gas cost of every call is independent of how many people bid, and no bidder can make settlement too expensive for others. Measured: each call costs exactly the same after 1 or 100 earlier bidders ([`evidence/09`](evidence/09-gas-scaling.txt)) |
 | Contract code is immutable; a fix means a new instance (M3 L2, slide 18) | One auction per deployment, no upgrade proxy, and immutable sale parameters. A deployed bug cannot be patched, which is why the audit in §5 happened before any deployment |
 | A block's timestamp only has to be later than its parent's (M3 L1, slide 8) | The price is a pure function of `block.timestamp`. On proof-of-stake Ethereum each 12-second slot fixes the timestamp, and a whole slot moves the price by 12 / 1,200 = 1% of the start-to-reserve range (0.00015 ETH per GVRA at the default prices). No producer can shift it further |
 | Miners order transactions by priority and fee, and may delay a transaction (M2 L3, slide 16; M2 L4, slide 12) | A uniform falling price removes the reason to race: waiting only lowers the price, and everyone pays the clearing price. The one race left is at sell-out, where the first bid to arrive gets the remaining capacity. It only concerns the last slice of supply, and it is listed as a known limitation in [`assumptions.md`](../design/assumptions.md#known-limitations) |

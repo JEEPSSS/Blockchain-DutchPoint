@@ -10,6 +10,7 @@
     "test:mocha": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test mocha",
     "test:solidity": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test solidity",
     "coverage": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat test --coverage",
+    "gas": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home GAS_REPORT=1 hardhat test mocha --gas-stats",
     "slither": "slither contracts/DutchAuction.sol --config-file slither.config.json --fail-medium && slither contracts/GavoraToken.sol --config-file slither.config.json --fail-medium",
     "node": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat node",
     "deploy:local": "mkdir -p .hardhat-home && HOME=$PWD/.hardhat-home hardhat run scripts/deploy.ts --network localhost",

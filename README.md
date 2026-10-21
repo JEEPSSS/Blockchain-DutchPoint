@@ -56,7 +56,8 @@ The narrated video plan is in [`docs/demo/demo-script.md`](docs/demo/demo-script
 
 | Command | What it runs |
 | --- | --- |
-| `npm test` | All 52 tests: 45 Mocha tests, plus 3 Solidity fuzz tests (1,000 runs each) and 4 invariants (256 runs, depth 50) |
+| `npm test` | All 53 tests: 46 Mocha tests, plus 3 Solidity fuzz tests (1,000 runs each) and 4 invariants (256 runs, depth 50) |
+| `npm run gas` | Gas-scaling table (each call costs the same with 1 or 100 earlier bidders) and per-function gas statistics |
 | `npm run coverage` | Same, with coverage - `DutchAuction.sol` and `GavoraToken.sol` are at 100% lines and statements |
 | `npm run slither` | Slither static analysis; fails on any Medium or High finding (needs `slither-analyzer` and `solc` 0.8.28) |
 | `npm run typecheck` / `npm run build` | Frontend and script type checks; production build |

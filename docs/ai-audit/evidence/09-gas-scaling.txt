@@ -1,0 +1,112 @@
+Evidence 09 - Gas scaling. Recorded 2026-10-21 on main after 49a0d59; contracts/DutchAuction.sol last changed in 2c450c4.
+Purpose: back the claim that no call costs more as the number of bidders grows (no loops over bidders),
+the gas-limit / denial-of-service concern from Module 3 Lecture 2 (slides 13-15).
+
+== 1. Gas scaling test on the real contract (test/Gas.test.ts)
+Each column deploys a fresh auction with that many earlier bidders (0.01 ETH each), then measures the same
+five calls at the same point in the auction's life. Tolerance: spread <= 1% of the cheapest run.
+$ GAS_REPORT=1 npm run test:mocha -- test/Gas.test.ts
+Running Mocha tests
+  Gas scaling
+      Gas used per call, by number of earlier bidders
+      Operation                          1 prior    10 prior    50 prior   100 prior   spread
+      Bid (new bidder)                    74,006      74,006      74,006      74,006        0
+      Crossing bid + surplus refund      126,372     126,372     126,372     126,372        0
+      Finalize                            84,549      84,549      84,549      84,549        0
+      Claim tokens                       153,762     153,762     153,762     153,762        0
+      Withdraw proceeds                   59,506      59,506      59,506      59,506        0
+    ✔ keeps the cost of bidding and settlement independent of the number of bidders (759ms)
+  1 passing (761ms)
+
+== 2. The test can fail: mutation M3
+A loop reading one storage slot per bidder was planted at the top of claimTokens(), the test was run,
+and the contract was restored with git checkout (git diff empty afterwards).
+$ GAS_REPORT=1 npm run test:mocha -- test/Gas.test.ts
+Running Mocha tests
+  Gas scaling
+      Gas used per call, by number of earlier bidders
+      Operation                          1 prior    10 prior    50 prior   100 prior   spread
+      Bid (new bidder)                    74,006      74,006      74,006      74,006        0
+      Crossing bid + surplus refund      126,372     126,372     126,372     126,372        0
+      Finalize                            84,549      84,549      84,549      84,549        0
+      Claim tokens                       163,417     185,899     285,819     410,719  247,302
+      Withdraw proceeds                   59,506      59,506      59,506      59,506        0
+    1) keeps the cost of bidding and settlement independent of the number of bidders
+  0 passing (739ms)
+  1 failing
+  1) Gas scaling
+       keeps the cost of bidding and settlement independent of the number of bidders:
+      AssertionError: Claim tokens: 163417, 185899, 285819, 410719: expected 247302 to be at most 1634.
+      + expected - actual
+      -247302
+      +1634
+      
+      at Context.<anonymous> (./test/Gas.test.ts:95:81)
+
+== 3. Per-function gas across the whole Mocha suite (Hardhat --gas-stats; production contracts only)
+$ npm run gas    (= GAS_REPORT=1 hardhat test mocha --gas-stats)
+║                                Gas Usage Statistics                                 ║
+╚═════════════════════════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════════════════════════╗
+║ contracts/DutchAuction.sol:DutchAuction                                             ║
+╟──────────────────────────────┬─────────┬─────────┬─────────┬─────────┬──────────────╢
+║ Function name                │ Min     │ Average │ Median  │ Max     │ #calls       ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║ AUCTION_DURATION             │ 21381   │ 21381   │ 21381   │ 21381   │ 1            ║
+║ burnedUnsold                 │ 23393   │ 23393   │ 23393   │ 23393   │ 6            ║
+║ burnRemainderAfterAllClaimed │ 47874   │ 56424   │ 56424   │ 64974   │ 2            ║
+║ claimTokens                  │ 114762  │ 137652  │ 148962  │ 153762  │ 20           ║
+║ cleared                      │ 23433   │ 23433   │ 23433   │ 23433   │ 4            ║
+║ clearingPrice                │ 23437   │ 23437   │ 23437   │ 23437   │ 1            ║
+║ clearingState                │ 25755   │ 29709   │ 29709   │ 33662   │ 2            ║
+║ clearingTime                 │ 23392   │ 23392   │ 23392   │ 23392   │ 6            ║
+║ commitments                  │ 23985   │ 23995   │ 23997   │ 23997   │ 6            ║
+║ contribute                   │ 51807   │ 81820   │ 74006   │ 127456  │ 218          ║
+║ currentPrice                 │ 25595   │ 29116   │ 27911   │ 34514   │ 5            ║
+║ endTime                      │ 23469   │ 24561   │ 24561   │ 25652   │ 2            ║
+║ finalize                     │ 84549   │ 105811  │ 92006   │ 169459  │ 24           ║
+║ finalPrice                   │ 23414   │ 23414   │ 23414   │ 23414   │ 5            ║
+║ issuerProceedsWithdrawn      │ 23502   │ 23502   │ 23502   │ 23502   │ 4            ║
+║ maxCommitmentAt              │ 21829   │ 21829   │ 21829   │ 21829   │ 1            ║
+║ participantCount             │ 23459   │ 23459   │ 23459   │ 23459   │ 2            ║
+║ priceAt                      │ 25908   │ 26312   │ 26508   │ 26508   │ 14           ║
+║ refundCredits                │ 23964   │ 23967   │ 23964   │ 23976   │ 4            ║
+║ refundLiability              │ 23482   │ 23482   │ 23482   │ 23482   │ 4            ║
+║ remainingCapacity            │ 23710   │ 32096   │ 33456   │ 36640   │ 7            ║
+║ start                        │ 77875   │ 77875   │ 77875   │ 77875   │ 41           ║
+║ startTime                    │ 23502   │ 23502   │ 23502   │ 23502   │ 41           ║
+║ status                       │ 23576   │ 28038   │ 26089   │ 35105   │ 7            ║
+║ tokensClaimed                │ 23986   │ 23992   │ 23992   │ 23998   │ 2            ║
+║ tokensOwed                   │ 26365   │ 29570   │ 28665   │ 35504   │ 5            ║
+║ totalCommitted               │ 23416   │ 23416   │ 23416   │ 23416   │ 5            ║
+║ totalTokensClaimed           │ 23481   │ 23481   │ 23481   │ 23481   │ 2            ║
+║ totalTokensSold              │ 23436   │ 23436   │ 23436   │ 23436   │ 5            ║
+║ withdrawIssuerProceeds       │ 59506   │ 59819   │ 59506   │ 62006   │ 8            ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║ Deployment                   │ Min     │ Average │ Median  │ Max     │ #deployments ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║                              │ 1808215 │ 1808329 │ 1808335 │ 1808335 │ 43           ║
+╟──────────────────────────────┼─────────┼─────────┴─────────┴─────────┴──────────────╢
+║ Bytecode size                │ 7868    │                                            ║
+╚══════════════════════════════╧═════════╧════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════════════════════════╗
+║ contracts/GavoraToken.sol:GavoraToken                                               ║
+╟──────────────────────────────┬─────────┬─────────┬─────────┬─────────┬──────────────╢
+║ Function name                │ Min     │ Average │ Median  │ Max     │ #calls       ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║ balanceOf                    │ 23979   │ 23989   │ 23991   │ 23991   │ 13           ║
+║ burn                         │ 33792   │ 33792   │ 33792   │ 33792   │ 1            ║
+║ decimals                     │ 21329   │ 21329   │ 21329   │ 21329   │ 1            ║
+║ name                         │ 24150   │ 24150   │ 24150   │ 24150   │ 1            ║
+║ symbol                       │ 24215   │ 24215   │ 24215   │ 24215   │ 1            ║
+║ totalSupply                  │ 23389   │ 23389   │ 23389   │ 23389   │ 5            ║
+║ transfer                     │ 46835   │ 46846   │ 46847   │ 46847   │ 43           ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║ Deployment                   │ Min     │ Average │ Median  │ Max     │ #deployments ║
+╟──────────────────────────────┼─────────┼─────────┼─────────┼─────────┼──────────────╢
+║                              │ 580197  │ 580209  │ 580209  │ 580209  │ 48           ║
+╟──────────────────────────────┼─────────┼─────────┴─────────┴─────────┴──────────────╢
+║ Bytecode size                │ 1939    │                                            ║
+╚══════════════════════════════╧═════════╧════════════════════════════════════════════╝
+Ranges reflect different paths (first vs. later bid, crossing bids with a refund, time-cleared vs. sold-out finalization),
+not the number of bidders; section 1 isolates that variable.

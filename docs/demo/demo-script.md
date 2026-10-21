@@ -44,7 +44,7 @@ the total supply reduced.
 
 1. In the `npm run demo` output, show scenarios 4 and 5: the same attacker drains **11 ETH** from the
    deliberately vulnerable auction, but gets only its own **0.75 ETH** refund from DutchPoint.
-2. Briefly show `npm test` (52 passing) and the coverage table, then the Slither summary in
+2. Briefly show `npm test` (53 passing) and the coverage table, then the Slither summary in
    `docs/ai-audit/evidence/08-slither.txt`.
 
 ## 7:30-9:00 - AI audit highlights
