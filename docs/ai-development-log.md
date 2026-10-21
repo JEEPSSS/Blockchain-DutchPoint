@@ -65,6 +65,9 @@ Lecture material used:
 - Module 3 Ethereum lectures: contract accounts, transactions, message calls, contract code execution, gas, and immutability.
 - DeFi lectures: gas wars, transaction ordering, Dutch auctions in liquidation contexts, and burn mechanics.
 
+> **Audit note (2026-10-21):** the course slides do not support this line. No deck mentions auctions,
+> liquidations, gas wars or front-running; see "Other issues found in the AI output" in the AI Audit Report.
+
 ## 2026-09-25 - Architecture Decisions
 
 Initial AI-generated architecture:

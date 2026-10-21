@@ -369,6 +369,7 @@ replaces per-bidder proceeds accrual with aggregate accounting ([`architecture.m
 | Frontend | 22 RPC reads every second; no bid history; owner-only buttons shown to everyone; raw error strings; "provisional allocation" estimated with the pro-rata rule | Block-driven refresh, event-based history, owner-gated issuer panel, decoded custom errors (`c689e3c`) |
 | Audit report | The Codex draft's two lead "issues" were hypothetical ("Inference: a simple implementation might…") and two others were bugs in its own test/demo scripts; none had before/after evidence | Replaced by this report; only defects reproduced on the original code are listed as findings |
 | Tooling | Slither never run ("not installed"); no fuzzing; no CI | Sections 6-7 |
+| Development log | Codex lists "DeFi lectures: gas wars, transaction ordering, Dutch auctions in liquidation contexts, and burn mechanics" as lecture material it used. The team confirmed Codex had the same slides as this review, and none of them mentions auctions, liquidations, gas wars or front-running. The invited talk's DeFi slides only show Aave, Compound, Kyber, Uniswap and Pendle. Only transaction ordering (Module 2 L3, slide 16) and burning (Module 3 L1, slide 25) are covered | Flagged in the log, where the claim is kept as Codex wrote it. [Appendix A](#appendix-a-course-concepts-applied) cites only slides that were checked |
 
 ### Issues in the second AI pass (Claude Code) caught by validation
 
@@ -463,6 +464,8 @@ The reviewing AI also made mistakes. They were caught by the same process:
 - **Self-assessment.** The first AI audit report listed hypothetical and test-script issues as findings,
   and its reentrancy test could not fail (F6). AI-written evidence needs the same scrutiny as AI-written code.
 - **Visual and layout details.** Overflow and label placement were only caught by rendering the page.
+- **Citing sources.** Codex's log credits the lectures with topics they never cover. An AI's account of
+  what it read is a claim to check, like any other.
 
 **Recommendations for AI-driven dApp development**
 1. Have a second, different model review the plan and the code, and treat disagreements between them as
