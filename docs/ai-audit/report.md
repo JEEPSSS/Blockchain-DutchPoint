@@ -469,6 +469,10 @@ The reviewing AI also made mistakes. They were caught by the same process:
 - Local time-travel tools for the demo; dark mode and a mobile layout.
 - From the manual MetaMask run: a light/dark theme toggle, an *Add GVRA to your wallet* button (EIP-747),
   and a clearer *Sell-out amount* shortcut.
+- Patterns borrowed from established Dutch auction platforms (Art Blocks, Sushi MISO, Gnosis Auction): a
+  *Sale details* card (contract addresses with copy buttons and explorer links, the sale window), visible
+  Etherscan links on bids, the bidder's share of supply, and a short FAQ. These borrow the patterns, not
+  the platforms' visual design.
 - GitHub Pages hosting (`.github/workflows/pages.yml`) that targets Sepolia, with a friendly "not deployed
   yet" card and an offline warning in place of raw RPC errors.
 

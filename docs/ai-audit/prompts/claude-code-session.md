@@ -350,3 +350,33 @@ grouped here:
   and the development log.
 - Explained uniform pricing: the student committed ETH, not a token count, so the lower final price gave
   more GVRA. Explained that dark mode follows the operating system setting.
+
+### Prompt 38
+
+> Yes, please go ahead. Also, we have decided to do the Sepolia deployment. Please remind me about team
+> names and roles another time. Can I disconnect my wallet from the site now?
+
+**Agent response:** built the three UX changes and checked them in headless Chrome with a mock wallet
+(`9fef77c`), fixing two wording issues the check screenshots revealed. Saved both reminders, explained
+how to disconnect a site in MetaMask, and confirmed two facts before writing the Sepolia steps. Hardhat
+reads an environment variable before the keystore, so only the private key needs encrypted storage. Gas
+on Sepolia was close to zero, so faucet ETH is only needed for bidding. Gave the steps that touch the
+private key for the student to run personally.
+
+### Prompt 39 (sent while the agent was working)
+
+> Could you also search for some well-known Dutch auction crypto websites? My plan is for you to follow
+> their architecture and replicate their design in ours.
+
+**Agent response:** researched Art Blocks, Sushi MISO, Gnosis Auction, Fjord Foundry and CoinList's
+Algorand sale. Advised borrowing their patterns rather than copying their designs, and proposed five
+additions.
+
+### Prompt 40
+
+> Do you recommend doing all five? I'll set up the Sepolia deployment later, when I'm awake.
+
+**Agent response:** recommended four of the five and explained why the fifth was not worth it. Admitted
+that one proposal already existed in the app. Built the other three, plus visible explorer links, and
+checked them in the browser, including the Sepolia link format via a temporary explorer setting it then
+removed. Moved the new card after the first screenshot showed an unbalanced layout.

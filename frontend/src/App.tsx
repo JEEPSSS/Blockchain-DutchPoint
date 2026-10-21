@@ -5,11 +5,13 @@ import { BidHistory } from "./components/BidHistory";
 import { BidPanel } from "./components/BidPanel";
 import { DemandMeter } from "./components/DemandMeter";
 import { DevTools } from "./components/DevTools";
+import { Faq } from "./components/Faq";
 import { Header } from "./components/Header";
 import { HowItWorks } from "./components/HowItWorks";
 import { NotDeployed } from "./components/NotDeployed";
 import { PositionPanel } from "./components/PositionPanel";
 import { PriceChart } from "./components/PriceChart";
+import { SaleInfo } from "./components/SaleInfo";
 import { SettlementPanel } from "./components/SettlementPanel";
 import { useAuction } from "./hooks/useAuction";
 import { useNow } from "./hooks/useNow";
@@ -234,6 +236,7 @@ export default function App() {
                     explorer={deployment?.explorer ?? null}
                   />
                 </section>
+                {deployment && <SaleInfo deployment={deployment} snapshot={snapshot} />}
               </div>
 
               <aside className="column">
@@ -252,6 +255,7 @@ export default function App() {
                     view={view}
                     position={snapshot.position}
                     finalPrice={snapshot.finalPrice}
+                    saleSupply={snapshot.saleSupply}
                     busy={busy}
                     onClaim={() => void run("Claim GVRA", (auction) => auction.claimTokens())}
                     onWithdrawRefund={() =>
@@ -280,6 +284,7 @@ export default function App() {
         )}
 
         <HowItWorks />
+        <Faq />
       </main>
 
       <footer className="footer">

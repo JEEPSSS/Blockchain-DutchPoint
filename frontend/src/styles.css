@@ -162,6 +162,8 @@ input {
 .btn:focus-visible,
 .chip:focus-visible,
 .theme-toggle:focus-visible,
+.copy:focus-visible,
+summary:focus-visible,
 input:focus-visible,
 a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
@@ -913,4 +915,68 @@ a.btn {
   .card {
     padding: 16px;
   }
+}
+
+/* ---------- Sale details ---------- */
+
+.rows dd.address {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.copy {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-height: 26px;
+  padding: 0 10px;
+}
+
+.copy:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ---------- Questions ---------- */
+
+.faq {
+  margin-top: 28px;
+}
+
+.faq h2 {
+  font-size: 1.15rem;
+  margin-bottom: 14px;
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.faq details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.faq details[open] summary {
+  margin-bottom: 8px;
+}
+
+.faq details p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
 }

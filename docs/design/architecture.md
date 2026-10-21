@@ -69,7 +69,7 @@
 | `lib/auctionMath.ts` | BigInt mirror of `priceAt`, `maxCommitmentAt`, time-based clearing and `status`, so the countdown, price and status update every second without extra RPC calls |
 | `lib/contracts.ts` | ABIs and deployments: `deployments.json` (public, committed) merged with `deployments.local.json` (local, gitignored); the default chain and read-only RPC from `VITE_DEFAULT_CHAIN_ID` / `VITE_READ_RPC_URL` |
 | `lib/errors.ts` | Maps wallet errors and custom contract errors to readable messages; recognises connection failures (timeouts, refused or failed requests) |
-| `components/` | Header, PriceChart, DemandMeter, BidPanel, PositionPanel, SettlementPanel, BidHistory, HowItWorks, NotDeployed (empty state), DevTools (local chain only) |
+| `components/` | Header (with the theme toggle), PriceChart, DemandMeter, BidPanel, PositionPanel (allocation, share of supply, add-to-wallet), SettlementPanel, BidHistory (Etherscan links on public networks), SaleInfo (contract addresses with copy and explorer links, sale window), HowItWorks, Faq, NotDeployed (empty state), DevTools (local chain only) |
 
 Before a wallet connects, the app reads through a read-only RPC (the local node by default, or
 `VITE_READ_RPC_URL`). Once a wallet on a supported chain connects, it reads and writes through the wallet.

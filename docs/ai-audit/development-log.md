@@ -324,3 +324,23 @@ Things the run surfaced (no defects):
 | *Add GVRA to your wallet* (`wallet_watchAsset`) under *Your position* | The student had to import the token by hand with its address | One request with `ERC20`, `GVRA`, 18 decimals and the deployed token address; the button then shows the added state |
 | *Sell-out amount* chip, styled apart from the quick amounts | The student could not find the old *Sell-out* chip | Accent styling confirmed; clicking it fills the amount and shows the sell-out callout |
 | "1 bidder" (was "1 bidders"); an exact sell-out no longer says "0 ETH comes straight back" | Spotted in the check screenshots | Re-checked after the fix |
+
+## 2026-10-22 - Patterns from established Dutch auction platforms
+
+The student asked for DutchPoint's design to follow well-known Dutch auction sites. The agent researched
+Art Blocks (Dutch auction with settlement: the same uniform-price-with-refund rule), Sushi MISO (a token
+launchpad with Dutch auctions), Gnosis Auction (sealed batch auction with one clearing price), Fjord
+Foundry (liquidity bootstrapping pools) and CoinList's 2019 Algorand sale. It recommended borrowing their
+UX patterns rather than copying their visual design, because of copyright, because the rubric marks the
+team's own UX, and because most of those platforms run different mechanisms. Of five proposals it built
+four and advised against a MISO-style "minimum tokens" input, which would add rounding questions for
+little gain. It also found that one proposal, Etherscan links on bids, already existed but was easy to
+miss.
+
+| Change | Browser check (headless Chrome, mock wallet, focus emulation for the clipboard) |
+| --- | --- |
+| *Sale details* card: network, token, token, auction and issuer addresses (copy button, explorer link on public networks), sale window; placed under *Bids* to balance the columns | Rows, three copy buttons and the window correct; *Copy* put the full auction address on the clipboard; local chain shows no explorer links and a redeploy note; with a temporary Sepolia explorer, all three addresses link to sepolia.etherscan.io |
+| Bid times link to the transaction (↗) with a hint line, on networks with an explorer | Local: no link or hint. Temporary explorer: link matches `https://sepolia.etherscan.io/tx/0x…` |
+| *Share of supply* in *Your position* | Shown as a percentage beside the allocation ("at least" before finalization) |
+| *Questions*: six collapsible answers (quote vs. final price, no sell-out, overpaying, claiming, proceeds, test money) | Six collapsed items; clicking a question opens it |
+| Layout | No horizontal scroll at 390 px |

@@ -2,12 +2,13 @@ import { useState } from "react";
 
 import { Position } from "../hooks/useAuction";
 import { Status, View, tokensFor } from "../lib/auctionMath";
-import { formatEth, formatToken } from "../lib/format";
+import { formatEth, formatToken, percent } from "../lib/format";
 
 type Props = {
   view: View;
   position: Position;
   finalPrice: bigint;
+  saleSupply: bigint;
   busy: boolean;
   onClaim: () => void;
   onWithdrawRefund: () => void;
@@ -15,11 +16,21 @@ type Props = {
   onAddToken: () => Promise<boolean>;
 };
 
-export function PositionPanel({ view, position, finalPrice, busy, onClaim, onWithdrawRefund, onAddToken }: Props) {
+export function PositionPanel({
+  view,
+  position,
+  finalPrice,
+  saleSupply,
+  busy,
+  onClaim,
+  onWithdrawRefund,
+  onAddToken
+}: Props) {
   const [tokenAdded, setTokenAdded] = useState(false);
   const finalized = view.status === Status.Finalized;
   const owed = tokensFor(position.commitment, finalized ? finalPrice : view.price);
   const hasBid = position.commitment > 0n;
+  const allocation = position.claimed ? position.tokensClaimed : owed;
 
   return (
     <section className="card">
@@ -34,7 +45,11 @@ export function PositionPanel({ view, position, finalPrice, busy, onClaim, onWit
           </div>
           <div>
             <dt>{finalized ? "GVRA allocation" : "GVRA allocation (at least)"}</dt>
-            <dd>{formatToken(position.claimed ? position.tokensClaimed : owed)}</dd>
+            <dd>{formatToken(allocation)}</dd>
+          </div>
+          <div>
+            <dt>{finalized ? "Share of supply" : "Share of supply (at least)"}</dt>
+            <dd>{percent(allocation, saleSupply).toFixed(1)}%</dd>
           </div>
           <div>
             <dt>GVRA in wallet</dt>
