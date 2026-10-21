@@ -207,3 +207,76 @@ and zero broken documentation links. Finally, it listed the remaining work and t
   GitHub's release API, cherry-picked its three commits onto `main` (`4d88495`, `388399e`, `9d828ae`)
   and re-ran the full check. It recorded the three frontend bugs the subagent had found in the
   earlier Claude Code frontend.
+
+---
+
+## Day 2 (continued) - repository ownership and the live site (21 October)
+
+### Prompt 17
+
+> Could JEEPSSS make me the owner of the repository, so that I don't need to ask him for permission every
+> time? I'll also ask him to make the repository public.
+
+**Agent response:** checked the repository first and found it was already public, so that request was
+unnecessary. Explained that a personal-account repository has exactly one owner, and that collaborators
+can push but cannot change settings such as Pages. Offered two routes: a free organization with all three
+students as owners (recommended), or a transfer to the student's account. Noted that a transfer keeps
+every commit hash, so the audit evidence stays valid, but changes the Pages address, so the move should
+happen before Pages is enabled. Also reported that the local app had stopped when the previous session
+ended.
+
+### Prompt 18
+
+> Please start the app.
+
+**Agent response:** started a fresh local node, deployed and seeded the auction, started the dev server,
+and repeated the MetaMask steps, including resetting MetaMask's activity data after a chain restart.
+
+### Prompt 19
+
+> I now own the repository. Could you set up GitHub Pages now?
+
+**Agent response:** checked with the GitHub API before acting. The repository still belonged to JEEPSSS,
+and the student had no admin rights, so it did not attempt the setup. Explained that a transfer to a
+personal account only completes when the recipient accepts it.
+
+### Prompt 20
+
+> How do I accept the ownership transfer from JEEPSSS? I'm on GitHub now.
+
+**Agent response:** explained that acceptance happens through the link in GitHub's email, which goes to
+the account's primary address and expires after about a day, and how to check that address.
+
+### Prompt 21
+
+> He has started the transfer to me (screenshot of his repository settings attached), but I didn't
+> receive an email.
+
+**Agent response:** read the screenshot, which showed "This repository is being transferred to
+@JacksonSeowJX". Confirmed from it that only acceptance was missing. Suggested searching all mail
+folders, checking the primary email setting, and having the transfer re-sent. Gave an organization
+route as a fallback that needs no email.
+
+### Prompt 22
+
+> I've accepted the transfer. Please check now.
+
+**Agent response:** confirmed through the API that the repository is now `JacksonSeowJX/Blockchain-DutchPoint`
+with admin rights, and that both other collaborators kept push access. Then it:
+- pointed the local clone at the new address;
+- enabled Pages with GitHub Actions as the source;
+- updated the four files that named the old address (`f7d935c`);
+- watched the Pages and CI runs succeed;
+- checked the live site: the page and every asset returned HTTP 200, and the build carried the Sepolia
+  settings;
+- rendered the site in headless Chrome, which showed the "not deployed on Sepolia yet" card.
+
+### Prompt 23 (sent while the agent was working)
+
+> Please handle the following, assigning a subagent to each task: (1) set up GitHub Pages; (2) update the
+> README; (3) show me the prompt logs for our session; (4) tell me what else you need from me.
+
+**Agent response:** explained that task 1 had just been completed and verified, so a subagent would only
+repeat it. Delegated the README refresh to a subagent in an isolated worktree, with a brief built around
+what graders need from the README. Handled tasks 3 and 4 directly: it updated this log, and listed what it
+still needed from the team.

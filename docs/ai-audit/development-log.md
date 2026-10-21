@@ -264,3 +264,16 @@ Subagent review by the main session before merging (cherry-picked onto `main`):
 | Pages-style build (`--base /Blockchain-DutchPoint/`, Sepolia default) and the normal build | Assets under the sub-path for Pages, and under `/` for the normal build |
 | Running local dev server after the merge | Still serves the local auction |
 | GitHub Pages enabled on the repository | **No** (API returns 404); the repo owner must enable it once |
+
+## 2026-10-21 - Repository transfer and GitHub Pages live
+
+The repository moved from JEEPSSS to JacksonSeowJX. GitHub redirects the old address, and every commit
+hash is unchanged, so the hashes cited in the audit report still resolve. Pages was then enabled through
+the API with GitHub Actions as the source (`POST /repos/{owner}/{repo}/pages`, `build_type=workflow`).
+
+| Check | Result |
+| --- | --- |
+| Repository owner and permissions | `JacksonSeowJX/Blockchain-DutchPoint`, admin; JEEPSSS and afwh24 keep write access |
+| `f7d935c` (links to the new owner) | Pages workflow: build and deploy succeeded; CI succeeded |
+| <https://jacksonseowjx.github.io/Blockchain-DutchPoint/> | `index.html`, JS and CSS all HTTP 200 under the sub-path; Sepolia chain ID and read RPC in the bundle |
+| Headless Chrome render of the live site | Header, "DutchPoint isn't deployed on Sepolia yet" card with the README link, and the how-it-works section |
