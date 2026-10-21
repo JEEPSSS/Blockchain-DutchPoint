@@ -277,3 +277,20 @@ the API with GitHub Actions as the source (`POST /repos/{owner}/{repo}/pages`, `
 | `f7d935c` (links to the new owner) | Pages workflow: build and deploy succeeded; CI succeeded |
 | <https://jacksonseowjx.github.io/Blockchain-DutchPoint/> | `index.html`, JS and CSS all HTTP 200 under the sub-path; Sepolia chain ID and read RPC in the bundle |
 | Headless Chrome render of the live site | Header, "DutchPoint isn't deployed on Sepolia yet" card with the README link, and the how-it-works section |
+
+## 2026-10-21 - Dependency audit and the submission zip
+
+| Commit | Change |
+| --- | --- |
+| `c55fcc1` | Runtime and development dependencies split (only `react`, `react-dom` and `ethers` are runtime); Vite 8.3.5 and `npm audit fix` without `--force`. `npm audit`: 10 (2 high, 8 low) -> 0; none reached the contracts or the shipped site (evidence 10) |
+| `4981dbc` | `npm run package` (`scripts/package.sh`): `DutchPoint.zip` built from a fresh single-branch clone, so it holds the tracked files and the full history, and refuses to run with uncommitted changes |
+
+Grader simulation on the zip built from `4981dbc` (3.1 MB), unzipped into an empty folder:
+
+| Check | Result |
+| --- | --- |
+| Contents | 84 files, all tracked; no `node_modules`, build output, `.env`, local deployment record or agent worktrees |
+| History | 25 commits on `main` only; `origin` points to GitHub; `git show 35253ce` works |
+| `npm ci` | 216 packages, 0 vulnerabilities |
+| `npm run check` | Compiled 7 files; 53 passing; build succeeded |
+| `npm run demo` | Five scenarios; no tracked files changed by the run |

@@ -301,3 +301,18 @@ When the README subagent reported back, the main session checked its claims agai
 
 It then read the whole README, cherry-picked the commit onto `main` (`eb6127b`), and re-ran the link check
 (10 files, 64 links, 0 broken).
+
+### Prompt 25
+
+> Please look into the npm audit issue. Yes, afwh24 is our third teammate. Are we deploying to Sepolia,
+> and what is it for? Our group name is DutchPoint. What do you recommend we do about the git history?
+
+**Agent response:** traced each of the 10 advisories to the package that pulled it in, and found none
+reached the contracts or the shipped site. Checked that the one "elliptic" match in the bundle was only
+error-message text. Found that the original `package.json` declared every build tool as a runtime
+dependency, and recorded that as an AI-output issue. Applied patch-level fixes only, bringing the audit
+to 0, re-ran every check, and wrote evidence 10 (`c55fcc1`).
+
+Recommended including the git history in the zip, because the report cites commits as evidence. Added
+`npm run package` (`4981dbc`) and tested the result as a grader would: unzipped it into an empty folder,
+then ran `npm ci`, the full check and the demo. Explained Sepolia again, with a recommendation.
