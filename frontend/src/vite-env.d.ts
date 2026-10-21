@@ -10,7 +10,8 @@ interface ImportMeta {
 }
 
 interface EthereumProviderLike {
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
+  // EIP-747 wallet_watchAsset takes an object rather than an array.
+  request(args: { method: string; params?: unknown[] | Record<string, unknown> }): Promise<unknown>;
   on?(event: "accountsChanged" | "chainChanged", handler: (...args: unknown[]) => void): void;
   removeListener?(
     event: "accountsChanged" | "chainChanged",

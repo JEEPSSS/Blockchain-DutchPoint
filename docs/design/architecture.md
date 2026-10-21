@@ -62,7 +62,8 @@
 
 | Module | Responsibility |
 | --- | --- |
-| `hooks/useWallet.ts` | EIP-1193 wallet connection, account/chain tracking, chain switching (adds Hardhat Local if missing) |
+| `hooks/useWallet.ts` | EIP-1193 wallet connection, account/chain tracking, chain switching (adds Hardhat Local if missing); `watchToken` asks the wallet to list GVRA (EIP-747 `wallet_watchAsset`) |
+| `hooks/useTheme.ts` | Auto / Light / Dark choice, applied as `data-theme` on `<html>` and remembered in `localStorage`; an inline script in `index.html` applies it before the first paint |
 | `hooks/useAuction.ts` | Reads all auction state in one batch; refreshes on new blocks (15 s fallback); incremental bid history from `ContributionReceived` events, scanned in 10,000-block chunks because public RPCs cap the `eth_getLogs` range; serialises concurrent refreshes; flags an unreachable RPC (`offline`) |
 | `hooks/useNow.ts` | 1-second clock used to extrapolate chain time between blocks |
 | `lib/auctionMath.ts` | BigInt mirror of `priceAt`, `maxCommitmentAt`, time-based clearing and `status`, so the countdown, price and status update every second without extra RPC calls |

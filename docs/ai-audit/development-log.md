@@ -315,3 +315,12 @@ Things the run surfaced (no defects):
   it. This is the intended behaviour, fixed in F2.
 - Usability notes for possible polish: the *Sell-out* chip was hard to spot; adding GVRA to MetaMask
   needed manual *Import tokens*; and dark mode follows the OS setting with no toggle.
+
+## 2026-10-22 - UX polish from the MetaMask run
+
+| Change | Why | Browser check (headless Chrome, mock wallet forwarding reads to the local node) |
+| --- | --- | --- |
+| Theme toggle in the header: Auto / Light / Dark, remembered in `localStorage`, applied before the first paint | Dark mode only followed the OS, so it could not be shown on demand | Auto → Light → Dark → Auto; the body background switched to the dark tokens; the choice survived a reload and was cleared on returning to Auto |
+| *Add GVRA to your wallet* (`wallet_watchAsset`) under *Your position* | The student had to import the token by hand with its address | One request with `ERC20`, `GVRA`, 18 decimals and the deployed token address; the button then shows the added state |
+| *Sell-out amount* chip, styled apart from the quick amounts | The student could not find the old *Sell-out* chip | Accent styling confirmed; clicking it fills the amount and shows the sell-out callout |
+| "1 bidder" (was "1 bidders"); an exact sell-out no longer says "0 ETH comes straight back" | Spotted in the check screenshots | Re-checked after the fix |

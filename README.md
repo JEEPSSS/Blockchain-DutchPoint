@@ -98,15 +98,19 @@ dashboard has history. It also moves the chain clock forward 7 minutes.
 2. As a bidder, enter an ETH amount (or click a quick amount) and click *Bid … ETH*. The quote shows the
    least GVRA you will receive: the final price can only be at or below the current price, so the
    allocation can only grow.
-3. To sell out the auction, click *Sell-out* and add a little more ETH. The callout shows how much comes
-   straight back in the same transaction. Once the bid is mined, the status changes to *Sold out*.
+3. To sell out the auction, click *Sell-out amount* (it fills in the ETH that buys everything left) and
+   add a little more. The callout shows how much comes straight back in the same transaction. Once the bid is mined, the status changes to *Sold out*.
 4. In the *Local demo tools* card, click **+20 min**. The status becomes *Ready to finalize*.
-5. Click *Finalize auction*, then *Claim …* under *Your position*. The GVRA arrives in your wallet.
+5. Click *Finalize auction*, then *Claim …* under *Your position*. The GVRA arrives in your wallet;
+   *Add GVRA to your wallet* lists the token in MetaMask without typing its address.
 6. Switch MetaMask to account #0 (the issuer) and click *Withdraw … proceeds* under *Settlement*.
 
 **Skipping time:** the *Local demo tools* card (shown only on the local chain) moves the chain clock
 forward 1, 5, 10 or 20 minutes, so a demo doesn't wait 20 real minutes. The command-line equivalent is
 `ADVANCE_SECONDS=600 npm run time:advance` (300 seconds if `ADVANCE_SECONDS` is not set).
+
+**Light and dark:** the theme button in the header cycles *Auto* (follows your operating system),
+*Light* and *Dark*, and the browser remembers the choice.
 
 ### Troubleshooting
 

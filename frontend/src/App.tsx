@@ -13,6 +13,7 @@ import { PriceChart } from "./components/PriceChart";
 import { SettlementPanel } from "./components/SettlementPanel";
 import { useAuction } from "./hooks/useAuction";
 import { useNow } from "./hooks/useNow";
+import { useTheme } from "./hooks/useTheme";
 import { useWallet } from "./hooks/useWallet";
 import { STATUS_LABELS, Status, viewAt } from "./lib/auctionMath";
 import {
@@ -36,6 +37,7 @@ type TxState =
 
 export default function App() {
   const wallet = useWallet();
+  const theme = useTheme();
   const now = useNow();
   const [tx, setTx] = useState<TxState>({ stage: "idle" });
 
@@ -106,7 +108,12 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header wallet={wallet} supported={walletDeployment !== null} />
+      <Header
+        wallet={wallet}
+        supported={walletDeployment !== null}
+        theme={theme.theme}
+        onCycleTheme={theme.cycle}
+      />
 
       <main className="shell">
         {/* Without a deployment, the NotDeployed card below offers the switch instead. */}
@@ -194,7 +201,9 @@ export default function App() {
               <div className="stat">
                 <span>Total committed</span>
                 <strong>{formatEth(snapshot.totalCommitted)}</strong>
-                <small>{snapshot.participantCount.toString()} bidders</small>
+                <small>
+                  {snapshot.participantCount.toString()} {snapshot.participantCount === 1n ? "bidder" : "bidders"}
+                </small>
               </div>
               <div className="stat">
                 <span>For sale</span>
@@ -248,6 +257,7 @@ export default function App() {
                     onWithdrawRefund={() =>
                       void run("Withdraw refund", (auction) => auction.withdrawRefundTo(account!))
                     }
+                    onAddToken={() => wallet.watchToken(deployment!.token, "GVRA", 18)}
                   />
                 )}
                 <SettlementPanel

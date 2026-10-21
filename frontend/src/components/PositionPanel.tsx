@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Position } from "../hooks/useAuction";
 import { Status, View, tokensFor } from "../lib/auctionMath";
 import { formatEth, formatToken } from "../lib/format";
@@ -9,9 +11,12 @@ type Props = {
   busy: boolean;
   onClaim: () => void;
   onWithdrawRefund: () => void;
+  /** Lists GVRA in the connected wallet; resolves true if the user accepted. */
+  onAddToken: () => Promise<boolean>;
 };
 
-export function PositionPanel({ view, position, finalPrice, busy, onClaim, onWithdrawRefund }: Props) {
+export function PositionPanel({ view, position, finalPrice, busy, onClaim, onWithdrawRefund, onAddToken }: Props) {
+  const [tokenAdded, setTokenAdded] = useState(false);
   const finalized = view.status === Status.Finalized;
   const owed = tokensFor(position.commitment, finalized ? finalPrice : view.price);
   const hasBid = position.commitment > 0n;
@@ -54,6 +59,15 @@ export function PositionPanel({ view, position, finalPrice, busy, onClaim, onWit
         <p className="hint">
           Claims open after the 20-minute window ends and anyone finalizes the auction.
         </p>
+      )}
+      {hasBid && (
+        <button
+          className="btn wide"
+          onClick={() => void onAddToken().then((added) => setTokenAdded(added))}
+          disabled={tokenAdded}
+        >
+          {tokenAdded ? "GVRA added to your wallet" : "Add GVRA to your wallet"}
+        </button>
       )}
       {position.refundCredit > 0n && (
         <button className="btn wide" onClick={onWithdrawRefund} disabled={busy}>

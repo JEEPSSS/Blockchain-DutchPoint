@@ -13,6 +13,8 @@ export type Wallet = {
   error: string;
   connect: () => Promise<void>;
   switchChain: (chainId: number) => Promise<void>;
+  /** Asks the wallet to list an ERC20 token; resolves true if the user accepted. */
+  watchToken: (address: string, symbol: string, decimals: number) => Promise<boolean>;
 };
 
 export function useWallet(): Wallet {
@@ -110,6 +112,27 @@ export function useWallet(): Wallet {
     [ethereum]
   );
 
+  const watchToken = useCallback(
+    async (address: string, symbol: string, decimals: number) => {
+      if (!ethereum) {
+        return false;
+      }
+      setError("");
+      try {
+        // EIP-747: the wallet shows the token and asks the user to confirm adding it.
+        const added = await ethereum.request({
+          method: "wallet_watchAsset",
+          params: { type: "ERC20", options: { address, symbol, decimals } }
+        });
+        return added === true;
+      } catch (err) {
+        setError(describeError(err));
+        return false;
+      }
+    },
+    [ethereum]
+  );
+
   return {
     available: Boolean(ethereum),
     provider,
@@ -118,6 +141,7 @@ export function useWallet(): Wallet {
     connecting,
     error,
     connect,
-    switchChain
+    switchChain,
+    watchToken
   };
 }

@@ -1,3 +1,4 @@
+import { ThemeChoice } from "../hooks/useTheme";
 import { Wallet } from "../hooks/useWallet";
 import { chainName } from "../lib/contracts";
 import { shortAddress } from "../lib/format";
@@ -5,9 +6,19 @@ import { shortAddress } from "../lib/format";
 type Props = {
   wallet: Wallet;
   supported: boolean;
+  theme: ThemeChoice;
+  onCycleTheme: () => void;
 };
 
-export function Header({ wallet, supported }: Props) {
+const THEME_LABELS: Record<ThemeChoice, { icon: string; label: string }> = {
+  system: { icon: "◐", label: "Auto" },
+  light: { icon: "☀", label: "Light" },
+  dark: { icon: "☾", label: "Dark" }
+};
+
+export function Header({ wallet, supported, theme, onCycleTheme }: Props) {
+  const themeLabel = THEME_LABELS[theme];
+
   return (
     <header className="topbar">
       <div className="brand">
@@ -23,6 +34,15 @@ export function Header({ wallet, supported }: Props) {
       </div>
 
       <div className="wallet">
+        <button
+          className="theme-toggle"
+          onClick={onCycleTheme}
+          title="Switch between automatic, light and dark themes"
+          aria-label={`Theme: ${themeLabel.label}. Click to change.`}
+        >
+          <span aria-hidden="true">{themeLabel.icon}</span>
+          {themeLabel.label}
+        </button>
         {wallet.chainId !== null && wallet.account && (
           <span className={`network-badge ${supported ? "ok" : "warn"}`}>
             <span className="dot" aria-hidden="true" />

@@ -12,7 +12,7 @@
 > Gavora tokens using ETH."
 
 Show the dashboard. Point out the price range, the 20-minute countdown and the three-step
-explanation at the bottom.
+explanation at the bottom. Click the theme button (top right) once or twice to show light and dark mode.
 
 ## 0:45-2:00 - Architecture
 
@@ -24,15 +24,18 @@ explanation at the bottom.
 ## 2:00-4:00 - Live auction
 
 1. Run `npm run seed:local`. Alice, Bob and Carol bid; the bid history and demand meter update.
+   Run it just before this segment: seeding moves the clock to minute 7, and the 8 ETH of seeded bids
+   sell the auction out by falling price alone at minute 16, about 9 real minutes later.
 2. Connect as Dave. Point at the quote: "You receive at least …" - the allocation can only grow.
-3. Click **Sell-out**, then add 1 ETH and bid. Point out the green callout: the extra ETH comes back in
+3. Click **Sell-out amount**, then add 1 ETH and bid. Point out the green callout: the extra ETH comes back in
    the same transaction. The status flips to *Sold out*, the chart marks the clearing point, and the
    history tags Dave's bid *Cleared*.
 
 ## 4:00-5:00 - Settlement
 
 1. Click **+20 min** in *Local demo tools*. The status becomes *Ready to finalize*.
-2. Click **Finalize auction**, then **Claim** - GVRA arrives in Dave's wallet.
+2. Click **Finalize auction**, then **Claim** - GVRA arrives in Dave's wallet. Click **Add GVRA to your
+   wallet** so MetaMask shows the balance.
 3. Switch MetaMask to the issuer and click **Withdraw proceeds** - exactly the accepted ETH.
 
 ## 5:00-6:00 - Undersubscribed sale and burn

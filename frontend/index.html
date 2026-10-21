@@ -9,6 +9,13 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='5' width='6' height='22' rx='2' fill='%230e7c72'/%3E%3Crect x='13' y='11' width='6' height='16' rx='2' fill='%230e7c72'/%3E%3Crect x='23' y='17' width='6' height='10' rx='2' fill='%23e9a823'/%3E%3C/svg%3E"
     />
     <title>DutchPoint - Gavora (GVRA) Token Launch</title>
+    <script>
+      // Apply a saved light/dark choice before the first paint, so the page never flashes the other theme.
+      try {
+        const theme = localStorage.getItem("dutchpoint-theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

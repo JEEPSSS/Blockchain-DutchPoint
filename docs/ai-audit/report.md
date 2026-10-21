@@ -467,6 +467,8 @@ The reviewing AI also made mistakes. They were caught by the same process:
 - Owner-only issuer panel and readable error messages.
 - Network switching that offers to add the local chain; read-only view before connecting.
 - Local time-travel tools for the demo; dark mode and a mobile layout.
+- From the manual MetaMask run: a light/dark theme toggle, an *Add GVRA to your wallet* button (EIP-747),
+  and a clearer *Sell-out amount* shortcut.
 - GitHub Pages hosting (`.github/workflows/pages.yml`) that targets Sepolia, with a friendly "not deployed
   yet" card and an offline warning in place of raw RPC errors.
 

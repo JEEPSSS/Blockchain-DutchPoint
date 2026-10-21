@@ -96,11 +96,11 @@ export function BidPanel({
           </button>
         ))}
         <button
-          className="chip"
+          className="chip accent"
           onClick={() => setInput(trimDecimal(formatEther(view.capacity), 6))}
-          title="The amount that sells out the auction at the current price"
+          title="Fill in the ETH that buys all remaining GVRA at the current price"
         >
-          Sell-out
+          Sell-out amount
         </button>
       </div>
       {inputError && <p className="field-error">{inputError}</p>}
@@ -118,8 +118,14 @@ export function BidPanel({
 
       {quote.clearsAuction && amount > 0n ? (
         <p className="callout success">
-          This bid sells out the auction. {formatEth(quote.accepted)} is accepted and{" "}
-          {formatEth(quote.refunded)} comes straight back to your wallet in the same transaction.
+          {quote.refunded > 0n ? (
+            <>
+              This bid sells out the auction. {formatEth(quote.accepted)} is accepted and{" "}
+              {formatEth(quote.refunded)} comes straight back to your wallet in the same transaction.
+            </>
+          ) : (
+            "This bid sells out the auction exactly. Add a little more and the extra comes straight back in the same transaction."
+          )}
         </p>
       ) : (
         <p className="hint">
