@@ -79,9 +79,38 @@ npm run deploy:sepolia
 ```
 
 The script prints Etherscan links and verification commands, and records addresses and transaction
-hashes in `deployments/sepolia.json`. To have the frontend default to Sepolia, set
+hashes in `deployments/sepolia.json`. It also writes the addresses to
+`frontend/src/generated/deployments.json`; commit that file to put the auction on the
+[live site](#live-site-github-pages). To have a local frontend default to Sepolia, set
 `VITE_DEFAULT_CHAIN_ID=11155111` (and optionally `VITE_READ_RPC_URL`) in `.env`. `START_AUCTION=false`
 deploys without starting, so the issuer can start the 20-minute window from the UI later.
+
+## Live site (GitHub Pages)
+
+**<https://jeepsss.github.io/Blockchain-DutchPoint/>**
+
+`.github/workflows/pages.yml` builds the frontend and publishes it to GitHub Pages on every push to `main`
+(or by hand from the Actions tab). The hosted build is served from the `/Blockchain-DutchPoint/` sub-path,
+defaults to Sepolia, and reads chain data through the `VITE_READ_RPC_URL` repository variable, or the keyless
+PublicNode Sepolia RPC if the variable is not set.
+
+- **One-time setup by the repository owner:** *Settings → Pages → Build and deployment → Source: GitHub
+  Actions*. Until then the Pages workflow fails at its `configure-pages` step; CI is unaffected.
+- **Until there is a Sepolia deployment**, the site explains that DutchPoint isn't deployed on Sepolia yet
+  and links back to the [local quick start](#quick-start-local). It becomes interactive once you run
+  `npm run deploy:sepolia`, commit the updated `frontend/src/generated/deployments.json` and push to `main`.
+- Everything in the Pages build is public JavaScript, so `VITE_READ_RPC_URL` must be a keyless (or
+  domain-restricted) RPC URL, never a secret. Set it under *Settings → Secrets and variables → Actions →
+  Variables*.
+- GitHub's free plans only offer Pages for **public** repositories. If this repository is made private,
+  the site needs a paid plan (Pro, Team or Enterprise).
+
+To preview the hosted build locally:
+
+```bash
+VITE_DEFAULT_CHAIN_ID=11155111 npm run build -- --base /Blockchain-DutchPoint/
+npx vite preview frontend --base /Blockchain-DutchPoint/ --port 4173   # http://127.0.0.1:4173/Blockchain-DutchPoint/
+```
 
 ## Project structure
 

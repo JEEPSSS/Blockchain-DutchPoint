@@ -63,15 +63,38 @@
 | Module | Responsibility |
 | --- | --- |
 | `hooks/useWallet.ts` | EIP-1193 wallet connection, account/chain tracking, chain switching (adds Hardhat Local if missing) |
-| `hooks/useAuction.ts` | Reads all auction state in one batch; refreshes on new blocks (15 s fallback); incremental bid history from `ContributionReceived` events; serialises concurrent refreshes |
+| `hooks/useAuction.ts` | Reads all auction state in one batch; refreshes on new blocks (15 s fallback); incremental bid history from `ContributionReceived` events, scanned in 10,000-block chunks because public RPCs cap the `eth_getLogs` range; serialises concurrent refreshes; flags an unreachable RPC (`offline`) |
 | `hooks/useNow.ts` | 1-second clock used to extrapolate chain time between blocks |
 | `lib/auctionMath.ts` | BigInt mirror of `priceAt`, `maxCommitmentAt`, time-based clearing and `status`, so the countdown, price and status update every second without extra RPC calls |
-| `lib/contracts.ts` | ABIs and deployments: `deployments.json` (public, committed) merged with `deployments.local.json` (local, gitignored) |
-| `lib/errors.ts` | Maps wallet errors and custom contract errors to readable messages |
-| `components/` | Header, PriceChart, DemandMeter, BidPanel, PositionPanel, SettlementPanel, BidHistory, HowItWorks, DevTools (local chain only) |
+| `lib/contracts.ts` | ABIs and deployments: `deployments.json` (public, committed) merged with `deployments.local.json` (local, gitignored); the default chain and read-only RPC from `VITE_DEFAULT_CHAIN_ID` / `VITE_READ_RPC_URL` |
+| `lib/errors.ts` | Maps wallet errors and custom contract errors to readable messages; recognises connection failures (timeouts, refused or failed requests) |
+| `components/` | Header, PriceChart, DemandMeter, BidPanel, PositionPanel, SettlementPanel, BidHistory, HowItWorks, NotDeployed (empty state), DevTools (local chain only) |
 
 Before a wallet connects, the app reads through a read-only RPC (the local node by default, or
 `VITE_READ_RPC_URL`). Once a wallet on a supported chain connects, it reads and writes through the wallet.
+
+When the chain being read has no deployment in the build (for example the hosted site before a Sepolia
+deployment is committed), `NotDeployed` replaces the dashboard. It says DutchPoint isn't deployed there yet,
+links to the README's local quick start and, if another chain in the build has a deployment, offers to
+connect or switch the wallet to it. If the RPC can't be reached, a warning replaces the raw error while the
+hook keeps retrying.
+
+## Hosting (GitHub Pages)
+
+`.github/workflows/pages.yml` publishes the frontend to <https://jeepsss.github.io/Blockchain-DutchPoint/>
+on every push to `main`. The `build` job runs `actions/configure-pages`, `npm ci` and `npm run build`, then
+uploads `frontend/dist` with `actions/upload-pages-artifact`. The `deploy` job publishes it with
+`actions/deploy-pages` to the `github-pages` environment. Only the Pages build differs from a local build:
+
+| Setting | Local (`npm run dev`, `npm run build`) | Pages build |
+| --- | --- | --- |
+| Vite `base` | `/` | `/Blockchain-DutchPoint/` (`--base`, from `configure-pages`' `base_path`) |
+| Default chain | `VITE_DEFAULT_CHAIN_ID`, else the first deployment, else Hardhat Local | Sepolia (`11155111`) |
+| Read-only RPC | `VITE_READ_RPC_URL`, else `127.0.0.1:8545` for the local chain | `vars.VITE_READ_RPC_URL`, else `https://ethereum-sepolia-rpc.publicnode.com` |
+| Deployments bundled | `deployments.json` + `deployments.local.json` | `deployments.json` only (the local file is gitignored) |
+
+The bundle is static and public, so it holds no secrets. Until `npm run deploy:sepolia` has been run and
+the updated `deployments.json` committed, the hosted site shows the `NotDeployed` state.
 
 ## Scripts
 
@@ -98,4 +121,4 @@ Before a wallet connects, the app reads through a read-only RPC (the local node 
 
 Solidity 0.8.28 (optimizer on, 200 runs), OpenZeppelin Contracts 5.6.1, Hardhat 3.18 with the
 Mocha/ethers toolbox and native Solidity tests (forge-std 1.9.7), Slither 0.11.6, React 19, Vite 8,
-ethers 6.17, and GitHub Actions.
+ethers 6.17, and GitHub Actions (CI, Slither and GitHub Pages).
