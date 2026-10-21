@@ -167,6 +167,10 @@ a:focus-visible {
   width: 100%;
 }
 
+a.btn {
+  text-decoration: none;
+}
+
 .chip {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -373,6 +377,38 @@ a:focus-visible {
 .status-pill.s3 {
   background: var(--gold-soft);
   border-color: transparent;
+}
+
+/* ---------- Empty state (no deployment on this chain) ---------- */
+
+.empty-state {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 28px;
+}
+
+.card.empty-state h2 {
+  font-size: 1.3rem;
+  margin: 4px 0 0;
+}
+
+.empty-state p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 680px;
+}
+
+.empty-state p strong {
+  color: var(--text);
+}
+
+.empty-state .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 /* ---------- Stats ---------- */

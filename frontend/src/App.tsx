@@ -7,6 +7,7 @@ import { DemandMeter } from "./components/DemandMeter";
 import { DevTools } from "./components/DevTools";
 import { Header } from "./components/Header";
 import { HowItWorks } from "./components/HowItWorks";
+import { NotDeployed } from "./components/NotDeployed";
 import { PositionPanel } from "./components/PositionPanel";
 import { PriceChart } from "./components/PriceChart";
 import { SettlementPanel } from "./components/SettlementPanel";
@@ -19,6 +20,7 @@ import {
   auctionAbi,
   chainName,
   defaultChainId,
+  deployedChainIds,
   deploymentFor,
   readRpcUrl
 } from "./lib/contracts";
@@ -49,7 +51,7 @@ export default function App() {
   const deployment = usingWallet ? walletDeployment : deploymentFor(defaultChainId);
   const account = usingWallet ? wallet.account : null;
 
-  const { snapshot, bids, error, refresh } = useAuction(provider, deployment, account);
+  const { snapshot, bids, error, offline, refresh } = useAuction(provider, deployment, account);
 
   // Extrapolate the chain clock between blocks so the countdown and price move every second.
   const chainNow = snapshot
@@ -57,8 +59,16 @@ export default function App() {
     : 0n;
   const view = snapshot ? viewAt(snapshot, chainNow) : null;
 
+  // A wallet on a chain without a deployment is offered the default chain if it has one,
+  // otherwise any chain that does; with no deployment anywhere there is nothing to switch to.
+  const switchTarget = deploymentFor(defaultChainId) ? defaultChainId : (deployedChainIds[0] ?? null);
   const wrongNetwork =
-    wallet.account !== null && walletDeployment === null ? chainName(defaultChainId) : null;
+    wallet.account !== null && walletDeployment === null && switchTarget !== null ? chainName(switchTarget) : null;
+  const switchNetwork = () => {
+    if (switchTarget !== null) {
+      void wallet.switchChain(switchTarget);
+    }
+  };
   const canTransact = usingWallet && wallet.account !== null;
   const isOwner =
     snapshot !== null && account !== null && snapshot.owner.toLowerCase() === account.toLowerCase();
@@ -99,20 +109,19 @@ export default function App() {
       <Header wallet={wallet} supported={walletDeployment !== null} />
 
       <main className="shell">
-        {wrongNetwork && (
+        {/* Without a deployment, the NotDeployed card below offers the switch instead. */}
+        {wrongNetwork && deployment && (
           <div className="notice warning" role="status">
             DutchPoint isn't deployed on {chainName(wallet.chainId!)}.
-            <button className="btn small" onClick={() => void wallet.switchChain(defaultChainId)}>
+            <button className="btn small" onClick={switchNetwork}>
               Switch to {wrongNetwork}
             </button>
           </div>
         )}
         {wallet.error && <div className="notice error">{wallet.error}</div>}
-        {error && <div className="notice error">{error}</div>}
-        {!deployment && !error && (
-          <div className="notice error">
-            No deployment found. Start a local node with <code>npm run node</code>, then run{" "}
-            <code>npm run deploy:local</code>.
+        {error && (
+          <div className={`notice ${offline ? "warning" : "error"}`} role="status">
+            {error}
           </div>
         )}
         {tx.stage !== "idle" && (
@@ -162,6 +171,17 @@ export default function App() {
             </div>
           )}
         </section>
+
+        {!deployment && (
+          <NotDeployed
+            chainId={defaultChainId}
+            liveOn={switchTarget}
+            connected={wallet.account !== null}
+            connecting={wallet.connecting}
+            onConnect={() => void wallet.connect()}
+            onSwitchNetwork={switchNetwork}
+          />
+        )}
 
         {snapshot && view && (
           <>
@@ -215,7 +235,7 @@ export default function App() {
                   wrongNetwork={wrongNetwork}
                   busy={busy}
                   onConnect={() => void wallet.connect()}
-                  onSwitchNetwork={() => void wallet.switchChain(defaultChainId)}
+                  onSwitchNetwork={switchNetwork}
                   onBid={(amount) => void run("Bid", (auction) => auction.contribute({ value: amount }))}
                 />
                 {snapshot.position && (

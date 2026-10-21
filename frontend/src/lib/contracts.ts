@@ -21,10 +21,14 @@ const deploymentFiles = import.meta.glob<Record<string, Deployment>>("../generat
 });
 const deployments: Record<string, Deployment> = Object.assign({}, ...Object.values(deploymentFiles));
 
+/** Every chain this build has DutchPoint addresses for. Empty on a build with no deployment. */
+export const deployedChainIds: number[] = Object.keys(deployments).map(Number);
+
 export const LOCAL_CHAIN_ID = 31337;
 export const LOCAL_RPC_URL = "http://127.0.0.1:8545";
 
 export const CHAIN_NAMES: Record<number, string> = {
+  1: "Ethereum Mainnet",
   [LOCAL_CHAIN_ID]: "Hardhat Local",
   11155111: "Sepolia"
 };

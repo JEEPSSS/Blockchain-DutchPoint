@@ -49,3 +49,18 @@ export function describeError(error: unknown): string {
   }
   return e.shortMessage ?? e.reason ?? e.message ?? "Transaction failed.";
 }
+
+/** True when a read failed because the RPC endpoint could not be reached or kept failing. */
+export function isConnectionError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const e = error as MaybeEthersError;
+  // ethers: request timed out, or HTTP errors (5xx, rate limiting) after its retries ran out.
+  if (e.code === "TIMEOUT" || e.code === "SERVER_ERROR") {
+    return true;
+  }
+  // fetch() itself rejects with "Failed to fetch" (Chrome), "NetworkError when attempting to
+  // fetch resource." (Firefox), "Load failed" (Safari) or "fetch failed" (Node).
+  return /failed to fetch|networkerror|load failed|fetch failed|ECONNREFUSED/i.test(e.message ?? "");
+}

@@ -2,8 +2,8 @@ import { Contract, EventLog, Provider } from "ethers";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AuctionState } from "../lib/auctionMath";
-import { Deployment, LOCAL_CHAIN_ID, auctionAbi, tokenAbi } from "../lib/contracts";
-import { describeError } from "../lib/errors";
+import { Deployment, LOCAL_CHAIN_ID, auctionAbi, chainName, tokenAbi } from "../lib/contracts";
+import { describeError, isConnectionError } from "../lib/errors";
 
 export type Position = {
   commitment: bigint;
@@ -49,6 +49,8 @@ export type AuctionData = {
   snapshot: Snapshot | null;
   bids: Bid[];
   error: string;
+  /** The last read failed because the RPC could not be reached; it is retried on every refresh. */
+  offline: boolean;
   refresh: () => Promise<void>;
 };
 
@@ -62,6 +64,7 @@ export function useAuction(
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [error, setError] = useState("");
+  const [offline, setOffline] = useState(false);
 
   const lastBidBlock = useRef(-1);
   const blockTimes = useRef(new Map<number, bigint>());
@@ -82,6 +85,7 @@ export function useAuction(
     setSnapshot(null);
     setBids([]);
     setError("");
+    setOffline(false);
     lastBidBlock.current = -1;
     blockTimes.current.clear();
   }, [contracts]);
@@ -253,6 +257,7 @@ export function useAuction(
       }
     }
     setError("");
+    setOffline(false);
   }, [contracts, provider, deployment, account, blockTime]);
 
   /** Serialises refreshes: block events can arrive while a read is still running. */
@@ -268,12 +273,18 @@ export function useAuction(
         try {
           await load();
         } catch (err) {
-          const message = describeError(err);
-          setError(
-            deployment?.chainId === LOCAL_CHAIN_ID && /fetch|network|ECONNREFUSED|connect/i.test(message)
-              ? "Can't reach the local Hardhat node at 127.0.0.1:8545. Start it with `npm run node`."
-              : message
-          );
+          const unreachable = isConnectionError(err);
+          setOffline(unreachable);
+          if (!unreachable) {
+            setError(describeError(err));
+          } else if (deployment?.chainId === LOCAL_CHAIN_ID) {
+            setError("Can't reach the local Hardhat node at 127.0.0.1:8545. Start it with `npm run node`.");
+          } else {
+            setError(
+              `Can't reach the ${chainName(deployment?.chainId ?? 0)} network right now. ` +
+                "Check your internet connection; DutchPoint keeps retrying in the background."
+            );
+          }
         }
       } while (queued.current);
     } finally {
@@ -297,5 +308,5 @@ export function useAuction(
     };
   }, [provider, contracts, refresh]);
 
-  return { snapshot, bids, error, refresh };
+  return { snapshot, bids, error, offline, refresh };
 }
