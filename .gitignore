@@ -10,3 +10,4 @@ types/
 *.tsbuildinfo
 *.pdf
 frontend/src/generated/deployments.local.json
+.claude/worktrees/

@@ -124,7 +124,8 @@ reviewed between members before merging.
   Codex wrote these before its Solidity code. They were then updated to the corrected
   allocation rule, so the AI was always working from a written spec, never from chat alone.
 - **Prompt logs:** [`prompts/`](prompts/README.md).
-  - Claude Code prompts are reproduced verbatim with what each produced.
+  - Claude Code prompts are listed in order with what each produced. Their wording is edited for
+    grammar and tone only, and the log says so.
   - The Codex prompt is summarised in [`development-log.md`](development-log.md).
   - The ChatGPT output is kept as-is.
 - **Context provided to the agents:** the brief (`project.pdf`), the ChatGPT plan, and the repository
@@ -132,13 +133,21 @@ reviewed between members before merging.
   it.
 
 **Representative prompt chain (Claude Code):**
-1. "Take a look at this project pdf…": the agent produced a requirements summary and a list of design
-   risks.
-2. "Read through the ChatGPT plan… we want an A": the agent compared the plan, the code and the rubric,
-   and found F1-F6.
-3. "Tell me what you plan to create": the agent produced a scoped plan with decisions for the team.
-4. "Do the items in the scope / go with your recommendation on item 1": the agent wrote failing tests
-   first, then the fixes, then validation.
+1. "Please review the attached project brief…": the agent produced a requirements summary and a list of
+   design risks.
+2. "Read through the ChatGPT plan… our group is aiming for an A": the agent compared the plan, the code
+   and the rubric, and found F1-F6.
+3. "Before you start building, please tell me what you plan to implement": the agent produced a scoped
+   plan with decisions for the team.
+4. "Please go ahead with the items in the scope / let's go with your recommendation for item 1": the
+   agent wrote failing tests first, then the fixes, then validation.
+5. "Please help us with item 1" (the pre-AI scope): the agent asked three questions before writing
+   anything about the team, instead of inventing facts it could not know.
+6. "Propose a folder structure before making any changes", then "go ahead": the agent proposed, waited
+   for approval, then made the change and verified it.
+
+The session was compacted once (see the log). Persistent memory files carried the team's decisions
+across that boundary, so the agent did not have to rediscover them.
 
 **Prompt-engineering lesson:** the Codex prompt told the agent to "Handle clearing caused by time
 passing without a new bid" and "Avoid unbounded loops". Codex followed both instructions literally,
