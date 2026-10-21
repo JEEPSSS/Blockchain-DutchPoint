@@ -11,3 +11,4 @@ types/
 *.pdf
 frontend/src/generated/deployments.local.json
 .claude/worktrees/
+/*.zip

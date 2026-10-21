@@ -233,6 +233,8 @@ Every script in `package.json`, run from the repository root.
 | `npm run gas` | Mocha tests with the gas-scaling table and per-function gas statistics |
 | `npm run slither` | Slither on both contracts |
 | `npm run demo` | The five deterministic scenarios |
+| **Submission** | |
+| `npm run package` | Build `DutchPoint.zip` from the last commit: tracked files plus the full git history (cited as evidence in the AI Audit Report), without `node_modules` or build output. Refuses to run with uncommitted changes |
 | **Sepolia (optional)** | |
 | `npm run keystore -- set <NAME>` | Store a secret in the Hardhat keystore |
 | `npm run deploy:sepolia` | Deploy, fund and start the auction on Sepolia |

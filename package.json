@@ -24,7 +24,8 @@
     "dev": "vite frontend --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p frontend && tsc --noEmit -p tsconfig.hardhat.json",
     "build": "tsc -b frontend && vite build frontend",
-    "check": "npm run compile && npm run test && npm run typecheck && npm run build"
+    "check": "npm run compile && npm run test && npm run typecheck && npm run build",
+    "package": "sh scripts/package.sh"
   },
   "dependencies": {
     "ethers": "6.17.0",
