@@ -280,3 +280,24 @@ with admin rights, and that both other collaborators kept push access. Then it:
 repeat it. Delegated the README refresh to a subagent in an isolated worktree, with a brief built around
 what graders need from the README. Handled tasks 3 and 4 directly: it updated this log, and listed what it
 still needed from the team.
+
+### Prompt 24
+
+> Please open the prompt log here in VS Code. Also, isn't GitHub Pages meant for documentation?
+
+**Agent response:** opened this file in the editor with the VS Code command-line tool. Explained that
+GitHub Pages hosts any static website: documentation is a common use, but a dApp frontend is also static,
+because it runs in the browser and talks to the chain through the wallet. Recommended keeping the live
+dApp on Pages, because GitHub already renders the repository's Markdown documentation. Offered to add a
+documentation section alongside the app if the team wanted one.
+
+When the README subagent reported back, the main session checked its claims against the repository:
+- the Node.js 22.13.0 minimum in Hardhat's version check;
+- the CI triggers;
+- the seed script's 7-minute clock advance;
+- the demo-tool time steps and the `time:advance` default;
+- every UI label and error message it quoted;
+- the environment-variable fallback for secrets.
+
+It then read the whole README, cherry-picked the commit onto `main` (`eb6127b`), and re-ran the link check
+(10 files, 64 links, 0 broken).
