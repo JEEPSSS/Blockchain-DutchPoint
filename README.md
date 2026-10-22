@@ -17,9 +17,10 @@ Ethereum. Connect your wallet to DutchPoint and bid for Gavora tokens using ETH:
 
 SC4053 Blockchain Technology, AY2026-27 Semester 1 - Development Project, Option 2.
 
-**Live site:** <https://jacksonseowjx.github.io/Blockchain-DutchPoint/> (built for Sepolia). It becomes
-interactive once the contracts are deployed to Sepolia; until then it shows a "not deployed on Sepolia yet"
-card. To use the full auction now, follow the [local quick start](#quick-start-local).
+**Live site:** <https://jacksonseowjx.github.io/Blockchain-DutchPoint/>. It runs against the contracts
+deployed on the Sepolia testnet (addresses in [`deployments/sepolia.json`](deployments/sepolia.json)), so
+it needs MetaMask on Sepolia with some free test ETH. To run everything on your own machine instead,
+follow the [local quick start](#quick-start-local).
 
 ![DutchPoint dashboard](docs/demo/screenshots/01-live-auction.png)
 
@@ -189,10 +190,13 @@ to `.env` and set `VITE_DEFAULT_CHAIN_ID=11155111` (and optionally `VITE_READ_RP
 The site is live. `.github/workflows/pages.yml` builds the frontend and publishes it on every push to
 `main` (or by hand from the Actions tab).
 
-- **What it shows today:** nothing is deployed to Sepolia yet, so the site shows a "DutchPoint isn't
-  deployed on Sepolia yet" card that links back to the [local quick start](#quick-start-local).
-- **Making it interactive:** run `npm run deploy:sepolia`, commit the updated
-  `frontend/src/generated/deployments.json` and push to `main`. The next Pages build bundles the addresses.
+- **What it shows:** the Sepolia auction recorded in `frontend/src/generated/deployments.json`:
+  [GavoraToken](https://sepolia.etherscan.io/address/0xa27d8D74e4e953348b55dc44bD3251bdc0Cc1053) and
+  [DutchAuction](https://sepolia.etherscan.io/address/0xe0f23743C959A9b9774114838A5fbD20d75C6FC0)
+  (1,000 GVRA, 0.0001 → 0.00002 ETH/GVRA, deployed unstarted so the issuer opens the window from the site).
+- **Redeploying:** run `npm run deploy:sepolia`, commit the updated `frontend/src/generated/deployments.json`
+  and `deployments/sepolia.json`, and push to `main`. The next Pages build bundles the new addresses. With
+  no Sepolia deployment, the site shows a "not deployed on Sepolia yet" card instead.
 - **Build settings:** the hosted build is served from the `/Blockchain-DutchPoint/` sub-path, defaults to
   Sepolia, and reads chain data through the `VITE_READ_RPC_URL` repository variable, or the keyless
   PublicNode Sepolia RPC if the variable is not set. Everything in the build is public JavaScript, so
