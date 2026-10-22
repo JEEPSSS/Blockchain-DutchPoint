@@ -1,0 +1,21 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x5D2EB775B96Ff879AE8Caa427Ef8D66BCB301010",
+  "deployedAt": "2026-10-22T22:11:26.682Z",
+  "parameters": {
+    "saleSupply": "1000",
+    "startPrice": "0.0001",
+    "reservePrice": "0.00002"
+  },
+  "contracts": {
+    "GavoraToken": "0xa27d8D74e4e953348b55dc44bD3251bdc0Cc1053",
+    "DutchAuction": "0xe0f23743C959A9b9774114838A5fbD20d75C6FC0"
+  },
+  "transactions": {
+    "deployToken": "0x7ff92a3fbc66ea280f04bd8e610b6501116571dfb3861c7f0a9820e6ff4f5d9e",
+    "deployAuction": "0xab077a62ce7854e6735ffebaab0407c2916a07b5ff2622b1c394edcfbf4b6496",
+    "fundAuction": "0x2fe0a241b7d29d0951945fbd762848410475172ec928739a7393b48fd479de74",
+    "startAuction": null
+  }
+}
