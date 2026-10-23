@@ -344,3 +344,31 @@ miss.
 | *Share of supply* in *Your position* | Shown as a percentage beside the allocation ("at least" before finalization) |
 | *Questions*: six collapsible answers (quote vs. final price, no sell-out, overpaying, claiming, proceeds, test money) | Six collapsed items; clicking a question opens it |
 | Layout | No horizontal scroll at 390 px |
+
+## 2026-10-23 - Sepolia deployment and first testnet run
+
+The student deployed from their own machine. The key was generated locally, imported into MetaMask and
+stored in the encrypted Hardhat keystore; the agent never saw it. The auction was deployed unstarted and
+run from the live GitHub Pages site. The agent verified each stage from Sepolia over RPC.
+
+| Stage | Transaction | Checked on-chain |
+| --- | --- | --- |
+| Deploy token, auction; fund | [token](https://sepolia.etherscan.io/tx/0x7ff92a3fbc66ea280f04bd8e610b6501116571dfb3861c7f0a9820e6ff4f5d9e), [auction](https://sepolia.etherscan.io/tx/0xab077a62ce7854e6735ffebaab0407c2916a07b5ff2622b1c394edcfbf4b6496), [fund](https://sepolia.etherscan.io/tx/0x2fe0a241b7d29d0951945fbd762848410475172ec928739a7393b48fd479de74) | Auction holds 1,000 GVRA; owner is the issuer; status Pending |
+| Start (from the site) | [0x191b4045…](https://sepolia.etherscan.io/tx/0x191b404550c411cca0ed98d8632d44491264117e92d6ce4de4dde57c6529c7d3) | `AuctionStarted` |
+| Bids | [0.01 ETH at 0.0000968](https://sepolia.etherscan.io/tx/0x5be76690b28dd658e23b2522155e935f56d794c29e200ba1146f156d65e2c85a), [0.005 ETH at 0.0000584](https://sepolia.etherscan.io/tx/0xc6bccbff49828febc70b37cf434ec1e38fdc6dbfb4f2c7c854c1a97b17e89131) | 0.015 ETH committed; not enough to sell out |
+| Finalize | [0x6f6f2b25…](https://sepolia.etherscan.io/tx/0x6f6f2b258ee65412ce38361d1ba3ecf076a4b67c656ad4f31021fc5c41c211c4) | Final price = reserve 0.00002; 750 sold; `TokensBurned` 250; GVRA total supply 750 |
+| Claim | [0xf1d4c0b8…](https://sepolia.etherscan.io/tx/0xf1d4c0b8c15f0b26923c40de0a6e8bedcfd28098b0000943a8078d35860f8b39) | 750 GVRA, so both bids paid 0.00002 |
+| Issuer withdrawal | [0xcb853f26…](https://sepolia.etherscan.io/tx/0xcb853f26d6a35a4400c3f212c124ce7da379396d308288d19c02d26574b698ea) | 0.015 ETH out; auction ETH 0; refund liability 0 |
+
+Observations:
+- **Deployment gas:** about 0.016 ETH, far above the agent's estimate, which assumed local-chain gas
+  amounts and the current fee. The token and auction deployments used about 3.7M and 12.6M gas on
+  Sepolia, against about 0.6M and 1.8M on the local Hardhat chain (evidence 09). The gas-scaling
+  evidence measures relative cost on the local chain; absolute costs differ between networks.
+- **EIP-7702 smart account:** MetaMask converted the issuer account into a smart account during the
+  run. The issuer's code is now a 7702 delegation to `0x63c0c19a…`. The first transaction, the upgrade
+  bundled with *Start*, failed and cost about 0.0005 ETH. MetaMask's retry succeeded. MetaMask then routed
+  *Start* and *Claim* through its helper contract `0xdb9B1e94…7dB3`, while the bids and *Finalize* went
+  directly. Every DutchPoint action worked in both modes. `onlyOwner` held because the delegated EOA,
+  not the helper, was `msg.sender`. That makes this a real-world check that the contract and UI work
+  with smart-account wallets.

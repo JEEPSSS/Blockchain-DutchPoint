@@ -380,3 +380,41 @@ additions.
 that one proposal already existed in the app. Built the other three, plus visible explorer links, and
 checked them in the browser, including the Sepolia link format via a temporary explorer setting it then
 removed. Moved the new card after the first screenshot showed an unbalanced layout.
+
+---
+
+## Day 4 - Sepolia deployment and the first testnet run (23 October)
+
+Prompts 41-52 guided the student through the deployment and the run, so they are grouped:
+
+41. "I'm awake now. How do I set up the Sepolia deployment? Could you also give me a crash course on
+    Solidity, in a Markdown file?"
+42. "How do I turn on test networks and switch to Sepolia in MetaMask?"
+43. "I'm on the Sepolia network. What's next?"
+44. "The Sepolia account is in MetaMask and the faucet says it sent 0.05 ETH. What's next?"
+45. "The terminal says the key was set in the production keystore."
+46. *(the deploy output, with the contract addresses and transaction links)*
+47. "How do I do step 4 onwards?"
+48. "The current price shows 0.000088, but the chart's labels show 0.0001 and 0.00006. Why?"
+49. "So at 20 minutes, 1 GVRA costs 0.0001?"
+50. "Should I get my friends to test it, so we have more bid records?"
+51. "I've finalized and withdrawn. How do I add GVRA to MetaMask, how do I check the records on
+    Etherscan, and could you write a testing guide for my friends?"
+52. "Sorry, I have now withdrawn the proceeds and added GVRA."
+
+**Agent response:**
+- Re-checked every command before giving it: the key generator, the keystore state and the Sepolia RPC.
+- Wrote a Solidity crash course built on the project's own contracts. It quotes the app's real error
+  text after checking it against the source.
+- Kept every private-key step on the student's machine.
+- After the deploy, verified the contracts on-chain before publishing their addresses. Admitted that its
+  deployment cost estimate had been far too low.
+- Read the auction's state from the chain at each question. Corrected the student's reading of the price
+  direction and explained the chart's reference lines.
+- Advised finishing the run solo, then planning a team sell-out run, rather than rushing friends in with
+  14 minutes left.
+- When the student reported the withdrawal, found none on-chain and reconstructed the account's
+  transactions. That revealed MetaMask's EIP-7702 smart-account upgrade and its failed first attempt.
+  The withdrawal itself landed a few blocks later.
+- Wrote a testing guide for friends, then recorded the full run with Etherscan links in report §6 and the
+  development log.
